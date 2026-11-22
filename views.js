@@ -23,6 +23,9 @@ function layout({ title, user, body, csrf, flash }) {
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:image" content="https://cdn.shopify.com/s/files/1/0905/1081/9694/files/wakil-ahmed-marketplace-social.jpg?v=1795390551">
+<meta property="og:image:secure_url" content="https://cdn.shopify.com/s/files/1/0905/1081/9694/files/wakil-ahmed-marketplace-social.jpg?v=1795390551">
+<meta property="og:image:alt" content="Wakil Ahmed Marketplace official logo">
 <title>${esc(title)} · ${esc(BRAND)}</title>
 <link rel="stylesheet" href="/static/style.css">
 </head><body>
