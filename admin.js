@@ -204,7 +204,7 @@ router.post("/team", wrap(async (req, res) => {
   const name = (req.body.name || "").trim().slice(0, 80);
   const email = (req.body.email || "").trim().toLowerCase();
   const password = req.body.password || "";
-  if (name.length < 2 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || password.length < 10) {
+  if (name.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || password.length < 10) {
     req.session.flash = { type: "error", text: "Enter a valid name, email and password of at least 10 characters." };
     return res.redirect("/admin/team");
   }
