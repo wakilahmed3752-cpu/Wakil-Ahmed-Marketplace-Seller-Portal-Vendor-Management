@@ -41,11 +41,32 @@ app.use((req, res, next) => {
     const ok = t.length === req.session.csrf.length && crypto.timingSafeEqual(Buffer.from(t), Buffer.from(req.session.csrf));
     if (!ok) return res.status(403).send("Your session expired. Go back, refresh the page, and try again.");
   }
-  res.page = (title, body) =>
-    res.send(layout({ title, user: req.session.user, body, csrf: res.locals.csrf, flash: res.locals.flash }));
+  res.page = (title, body, seo = {}) =>
+    res.send(layout({ title, user: req.session.user, body, csrf: res.locals.csrf, flash: res.locals.flash, pathname: req.path, seo }));
   next();
 });
 
+app.get("/robots.txt", (_req, res) => {
+  res.type("text/plain").send([
+    "User-agent: *",
+    "Allow: /register",
+    "Allow: /login",
+    "Disallow: /seller",
+    "Disallow: /admin",
+    "Disallow: /webhooks",
+    "Disallow: /healthz",
+    "Sitemap: https://seller.wakilahmed.com/sitemap.xml",
+    ""
+  ].join("\n"));
+});
+app.get("/sitemap.xml", (_req, res) => {
+  res.type("application/xml").send([
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    '  <url><loc>https://seller.wakilahmed.com/register</loc></url>',
+    '</urlset>'
+  ].join("\n"));
+});
 app.get("/healthz", (_req, res) => res.send("ok"));
 app.get("/googlef773f6d44fa4fd9f.html", (_req, res) => res.type("text/plain").send("google-site-verification: googlef773f6d44fa4fd9f.html"));
 app.use("/", require("./auth"));
