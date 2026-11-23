@@ -37,7 +37,10 @@ const registerForm = (csrf, v = {}, errs = []) => `
   <p class="muted center">Already approved? <a href="/login">Sign in</a></p>
 </div>`;
 
-router.get("/register", (req, res) => res.page("Become a seller", registerForm(res.locals.csrf)));
+router.get("/register", (req, res) => res.page("Become a seller", registerForm(res.locals.csrf), {
+  indexable: true,
+  description: "Apply to become a seller on Wakil Ahmed Marketplace. US-based sellers can submit a shop application, list approved products, ship orders with carrier tracking, and manage marketplace earnings."
+}));
 
 router.post(
   "/register",
