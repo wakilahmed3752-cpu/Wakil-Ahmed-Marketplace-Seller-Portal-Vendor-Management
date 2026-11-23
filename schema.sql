@@ -77,3 +77,19 @@ CREATE TABLE IF NOT EXISTS seller_tiktok_ads (
   advertiser_ids   JSONB NOT NULL DEFAULT '[]'::jsonb,
   connected_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+
+-- Each seller owns an isolated set of advertising OAuth connections.
+CREATE TABLE IF NOT EXISTS seller_ad_accounts (
+  id SERIAL PRIMARY KEY,
+  seller_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL CHECK (provider IN ('google','meta','tiktok')),
+  access_token_enc TEXT NOT NULL,
+  refresh_token_enc TEXT,
+  expires_at TIMESTAMPTZ,
+  scopes TEXT,
+  account_label TEXT,
+  connected_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (seller_id, provider)
+);
+CREATE INDEX IF NOT EXISTS seller_ad_accounts_seller_idx ON seller_ad_accounts(seller_id);
