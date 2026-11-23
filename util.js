@@ -13,7 +13,7 @@ const requireRole = (role) =>
     if (!u || u.status !== "approved") {
       return req.session.destroy(() => res.redirect("/login"));
     }
-    if (u.role !== role) {
+    if (!(Array.isArray(role) ? role.includes(u.role) : u.role === role)) {
       return res.status(403).page("Not allowed", "<div class='card'><h1>Not allowed</h1><p>You do not have access to this page.</p></div>");
     }
     next();
