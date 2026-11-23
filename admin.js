@@ -14,6 +14,15 @@ router.get(
               coalesce((select sum(earning_cents) from earnings where status='unpaid'),0)::bigint owed,
               coalesce((select sum(commission_cents) from earnings),0)::bigint commission,
               (select max(currency) from earnings) cur`);
+    const { rows: monthly } = await q(
+      `select to_char(date_trunc('month', order_date), 'Mon') label,
+              coalesce(sum(gross_cents),0)::bigint sales
+       from earnings where order_date >= date_trunc('month', now()) - interval '5 months'
+       group by date_trunc('month', order_date) order by date_trunc('month', order_date)`);
+    const maxSales = Math.max(1, ...monthly.map((m) => Number(m.sales)));
+    const chart = monthly.length ? monthly.map((m) =>
+      `<div class="chart-col"><div class="chart-value">${money(m.sales, s.cur || "")}</div><div class="chart-bar-wrap"><div class="chart-bar" style="height:${Math.max(4, Math.round(Number(m.sales) / maxSales * 100))}%"></div></div><span>${esc(m.label)}</span></div>`
+    ).join("") : '<p class="muted">Sales activity will appear here when paid orders arrive.</p>';
     res.page("Overview", `
 <h1>Marketplace overview</h1>
 <div class="stats">
@@ -22,6 +31,7 @@ router.get(
   <div class="stat"><span>Owed to sellers</span><strong>${money(s.owed, s.cur || "")}</strong></div>
   <div class="stat"><span>Your commission earned</span><strong>${money(s.commission, s.cur || "")}</strong></div>
 </div>
+<div class="card sales-card"><div class="section-head"><div><h2>Sales performance</h2><p class="muted small">Gross sales · Last 6 months</p></div><span class="chart-key"><i></i> Sales</span></div><div class="sales-chart">${chart}</div></div>
 <div class="card"><p><a class="btn" href="/admin/sellers">Review sellers</a> <a class="btn btn-ghost" href="/admin/payouts">Pay sellers</a></p></div>`);
   })
 );
