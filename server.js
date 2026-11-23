@@ -16,6 +16,8 @@ app.use(helmet());
 app.use("/webhooks", require("./webhooks"));
 
 app.get("/static/style.css", (_req, res) => res.sendFile(path.join(__dirname, "style.css"), { maxAge: "1d" }));
+app.get("/static/logo.png", (_req, res) => res.sendFile(path.join(__dirname, "logo.png"), { maxAge: "30d", immutable: true }));
+app.get("/static/favicon.png", (_req, res) => res.sendFile(path.join(__dirname, "favicon.png"), { maxAge: "30d", immutable: true }));
 app.use(express.urlencoded({ extended: false, limit: "50kb" }));
 
 app.use(

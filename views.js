@@ -30,14 +30,16 @@ function layout({ title, user, body, csrf, flash, pathname = "/", seo = {} }) {
 <meta property="og:description" content="${esc(seo.description || "Wakil Ahmed Marketplace seller portal.")}">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://seller.wakilahmed.com${esc(pathname)}">
-<meta property="og:image" content="https://cdn.shopify.com/s/files/1/0905/1081/9694/files/wakil-ahmed-marketplace-social.jpg?v=1795390551">
-<meta property="og:image:secure_url" content="https://cdn.shopify.com/s/files/1/0905/1081/9694/files/wakil-ahmed-marketplace-social.jpg?v=1795390551">
+<meta property="og:image" content="https://seller.wakilahmed.com/static/logo.png">
+<meta property="og:image:secure_url" content="https://seller.wakilahmed.com/static/logo.png">
 <meta property="og:image:alt" content="Wakil Ahmed Marketplace official logo">
 <title>${esc(title)} · ${esc(BRAND)}</title>
+<link rel="icon" type="image/png" sizes="48x48" href="/static/favicon.png">
+<link rel="apple-touch-icon" href="/static/logo.png">
 <link rel="stylesheet" href="/static/style.css">
 </head><body>
 <header class="top"><div class="wrap bar">
-  <a class="brand" href="/">${esc(BRAND)}</a>
+  <a class="brand" href="/" aria-label="Wakil Ahmed Marketplace home"><img src="/static/logo.png" alt="" width="48" height="48"><span>${esc(BRAND)}</span></a>
   <nav>${nav}</nav>
 </div></header>
 <main class="wrap">${flashHtml}${body}</main>
