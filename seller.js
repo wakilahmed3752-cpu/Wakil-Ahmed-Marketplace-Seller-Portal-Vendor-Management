@@ -30,6 +30,14 @@ router.get(
               coalesce(sum(earning_cents) filter (where status='paid'),0)::bigint paid,
               max(currency) cur
        from earnings where user_id = $1`, [id]);
+    const { rows: monthly } = await q(
+      `select to_char(date_trunc('month', order_date), 'Mon') label, coalesce(sum(gross_cents),0)::bigint sales
+       from earnings where user_id=$1 and order_date >= date_trunc('month', now()) - interval '5 months'
+       group by date_trunc('month', order_date) order by date_trunc('month', order_date)`, [id]);
+    const maxSales = Math.max(1, ...monthly.map((m) => Number(m.sales)));
+    const chart = monthly.length ? monthly.map((m) =>
+      `<div class="chart-col"><div class="chart-value">${money(m.sales, t.cur || "")}</div><div class="chart-bar-wrap"><div class="chart-bar" style="height:${Math.max(4, Math.round(Number(m.sales) / maxSales * 100))}%"></div></div><span>${esc(m.label)}</span></div>`
+    ).join("") : '<p class="muted">Your sales activity will appear here when orders arrive.</p>';
     const { rows: recent } = await q("select * from earnings where user_id=$1 order by order_date desc nulls last, id desc limit 10", [id]);
     const { rows: pays } = await q("select * from payouts where user_id=$1 order by id desc limit 10", [id]);
     const { rows: [me] } = await q("select shop_name, commission_rate from users where id=$1", [id]);
@@ -42,6 +50,7 @@ router.get(
   <div class="stat"><span>Net sales</span><strong>${money(t.sales, cur)}</strong></div>
   <div class="stat"><span>Commission (${esc(me.commission_rate)}%)</span><strong>${money(t.commission, cur)}</strong></div>
 </div>
+<div class="card sales-card"><div class="section-head"><div><h2>Sales performance</h2><p class="muted small">Gross sales · Last 6 months</p></div><span class="chart-key"><i></i> Sales</span></div><div class="sales-chart">${chart}</div></div>
 <div class="card"><h2>Recent orders</h2>${rowsTable(recent)}<p><a href="/seller/orders">View all orders</a></p></div>
 <div class="card"><h2>Payment history</h2>${
       pays.length
