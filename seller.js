@@ -104,4 +104,9 @@ router.post(
   })
 );
 
+
+// Catalog sections are visible while the Shopify product and inventory sync is prepared.
+router.get("/products", (_req, res) => res.page("Products", '<h1>Products</h1><div class="card"><h2>Shopify product connection required</h2><p class="muted">Your seller account can view orders and earnings today. Product submissions and Shopify catalog publishing are not connected yet, so this page will not create or change products.</p><p class="small muted">Next step: connect a secure Shopify app integration with product approval rules before enabling listings.</p></div>'));
+router.get("/inventory", (_req, res) => res.page("Inventory", '<h1>Inventory</h1><div class="card"><h2>Inventory sync not enabled</h2><p class="muted">Live stock quantities are not currently synchronized with Shopify. This page is a placeholder until inventory permissions and stock update workflows are implemented.</p><p class="small muted">No inventory quantities have been changed.</p></div>'));
+
 module.exports = router;
