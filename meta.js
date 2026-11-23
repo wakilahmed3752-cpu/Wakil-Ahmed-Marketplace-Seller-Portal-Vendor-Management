@@ -6,7 +6,7 @@ const { esc, csrfField } = require("./views");
 
 const graphVersion = () => process.env.META_GRAPH_VERSION || "";
 const callbackUrl = () => process.env.META_REDIRECT_URI || "https://seller.wakilahmed.com/integrations/meta/callback";
-const configured = () => Boolean(process.env.META_APP_ID && process.env.META_APP_SECRET && process.env.META_TOKEN_ENCRYPTION_KEY && /^v\\d+\\.\\d+$/.test(graphVersion()));
+const configured = () => Boolean(process.env.META_APP_ID && process.env.META_APP_SECRET && process.env.META_TOKEN_ENCRYPTION_KEY && /^v\d+\.\d+$/.test(graphVersion()));
 
 function encryptionKey() {
   const key = Buffer.from(process.env.META_TOKEN_ENCRYPTION_KEY || "", "base64");
