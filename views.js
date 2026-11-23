@@ -18,7 +18,10 @@ function layout({ title, user, body, csrf, flash, pathname = "/", seo = {} }) {
     nav = '<a href="/login">Sign in</a><a class="btn btn-sm" href="/register">Become a seller</a>';
   } else if (user.role === "admin") {
     section = "Administrator";
-    nav = '<a href="/admin" class="navlink">Overview</a><a href="/admin/sellers" class="navlink">Sellers</a><a href="/admin/payouts" class="navlink">Payouts</a><a href="/admin/earnings" class="navlink">Earnings</a>' + out;
+    nav = '<a href="/admin" class="navlink">Overview</a><a href="/admin/sellers" class="navlink">Sellers</a><a href="/admin/payouts" class="navlink">Payouts</a><a href="/admin/earnings" class="navlink">Earnings</a><a href="/admin/team" class="navlink">Team access</a><a href="/admin/marketing" class="navlink">Marketing</a><a href="/admin/advertising" class="navlink">Advertising</a>' + out;
+  } else if (user.role === "employee") {
+    section = "Employee workspace";
+    nav = '<a href="/admin" class="navlink">Overview</a><a href="/admin/sellers" class="navlink">Sellers</a><a href="/admin/earnings" class="navlink">Earnings</a>' + out;
   } else {
     section = "Seller workspace";
     nav = '<a href="/seller" class="navlink">Dashboard</a><a href="/seller/orders" class="navlink">Orders</a><a href="/seller/profile" class="navlink">Payout details</a>' + out;
