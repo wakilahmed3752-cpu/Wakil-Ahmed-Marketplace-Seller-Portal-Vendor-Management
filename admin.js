@@ -1,9 +1,16 @@
 const router = require("express").Router();
+const bcrypt = require("bcryptjs");
 const { pool, q } = require("./db");
 const { wrap, requireRole } = require("./util");
 const { esc, money, date, csrfField } = require("./views");
 
-router.use(requireRole("admin"));
+router.use(requireRole(["admin", "employee"]));
+router.use("/payouts", requireRole("admin"));
+router.use("/team", requireRole("admin"));
+router.use("/marketing", requireRole("admin"));
+router.use("/advertising", requireRole("admin"));
+router.use("/sellers/:id/status", requireRole("admin"));
+router.use("/sellers/:id/commission", requireRole("admin"));
 
 router.get(
   "/",
@@ -184,5 +191,36 @@ router.get(
     }</div>`);
   })
 );
+
+
+// ---------- Admin-only team access ----------
+router.get("/team", wrap(async (req, res) => {
+  const { rows } = await q("select id, name, email, status, created_at from users where role='employee' order by created_at desc");
+  const list = rows.length ? '<div class="scroll"><table><tr><th>Name</th><th>Email</th><th>Status</th><th>Added</th></tr>' + rows.map((u) => '<tr><td>' + esc(u.name) + '</td><td>' + esc(u.email) + '</td><td><span class="pill pill-' + esc(u.status) + '">' + esc(u.status) + '</span></td><td>' + date(u.created_at) + '</td></tr>').join("") + '</table></div>' : '<p class="muted">No employee accounts yet.</p>';
+  res.page("Team access", '<h1>Team access</h1><div class="card narrow"><h2>Add an employee</h2><p class="muted small">Employees can view the marketplace overview, seller list and earnings. They cannot manage payouts, change commissions, approve sellers, or manage other accounts.</p><form method="post" action="/admin/team">' + csrfField(res.locals.csrf) + '<label>Employee name<input name="name" required maxlength="80"></label><label>Work email<input type="email" name="email" required maxlength="254"></label><label>Temporary password <small>(10 characters minimum)</small><input type="password" name="password" required minlength="10" maxlength="100"></label><button class="btn btn-block">Create employee account</button></form></div><div class="card"><h2>Employee accounts</h2>' + list + '</div>');
+}));
+
+router.post("/team", wrap(async (req, res) => {
+  const name = (req.body.name || "").trim().slice(0, 80);
+  const email = (req.body.email || "").trim().toLowerCase();
+  const password = req.body.password || "";
+  if (name.length < 2 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || password.length < 10) {
+    req.session.flash = { type: "error", text: "Enter a valid name, email and password of at least 10 characters." };
+    return res.redirect("/admin/team");
+  }
+  const hash = await bcrypt.hash(password, 12);
+  try {
+    await q("insert into users (email, password_hash, role, name, status) values ($1,$2,'employee',$3,'approved')", [email, hash, name]);
+    req.session.flash = { type: "ok", text: "Employee account created. Share the login details with the employee privately." };
+  } catch (e) {
+    if (e.code === "23505") req.session.flash = { type: "error", text: "That email address is already in use." };
+    else throw e;
+  }
+  res.redirect("/admin/team");
+}));
+
+// ---------- Marketing and advertising workspaces ----------
+router.get("/marketing", (_req, res) => res.page("Marketing", '<h1>Marketing workspace</h1><p class="muted">Plan and review marketplace marketing activity from one place.</p><div class="stats"><div class="stat"><span>Organic channels</span><strong>SEO & social</strong></div><div class="stat"><span>Campaign planning</span><strong>Available</strong></div><div class="stat"><span>Connected accounts</span><strong>Not connected</strong></div></div><div class="card"><h2>Marketing options</h2><ul><li>Product titles, descriptions and search optimization</li><li>Social content planning for TikTok, Facebook, Instagram and Pinterest</li><li>Email campaign planning and customer announcements</li><li>Campaign performance review when channel data is connected</li></ul><p class="muted small">This workspace does not publish posts or send emails until an approved platform connection is configured.</p></div>'));
+router.get("/advertising", (_req, res) => res.page("Advertising", '<h1>Advertising workspace</h1><p class="muted">Organize paid advertising options without changing any live campaigns.</p><div class="stats"><div class="stat"><span>Google Ads</span><strong>Not connected</strong></div><div class="stat"><span>Meta Ads</span><strong>Not connected</strong></div><div class="stat"><span>TikTok Ads</span><strong>Not connected</strong></div></div><div class="card"><h2>Advertising options</h2><ul><li>Google Search and Shopping campaigns</li><li>Facebook and Instagram campaigns</li><li>TikTok advertising campaigns</li><li>Budget, creative and performance planning</li></ul><p class="muted small">No advertising account has been connected and no campaign or spend has been created. Connect an advertising account before launching ads.</p></div>'));
 
 module.exports = router;
