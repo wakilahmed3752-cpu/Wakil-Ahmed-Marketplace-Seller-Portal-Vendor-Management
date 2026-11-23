@@ -69,7 +69,7 @@ Set these Render environment variables before enabling the connection:
 - `META_APP_SECRET`: Meta developer app secret.
 - `META_REDIRECT_URI`: `https://seller.wakilahmed.com/integrations/meta/callback` (must exactly match the Meta app OAuth redirect URI).
 - `META_TOKEN_ENCRYPTION_KEY`: base64-encoded 32-byte random key used for AES-256-GCM token encryption. Generate with `openssl rand -base64 32`.
-- `META_GRAPH_VERSION`: optional Graph API version, for example `v22.0`; keep this aligned with the version supported by your Meta app.
+- `META_GRAPH_VERSION`: required Graph API version supported by your Meta app, formatted like `v24.0`; confirm the currently supported version in Meta for Developers before setting it.
 
 In Meta for Developers, configure Facebook Login / OAuth redirect URI, add the `ads_read` and `ads_management` permissions required by the intended seller features, and complete Meta App Review / business verification as Meta requires. Keep app secrets only in Render environment variables. Never commit them to GitHub.
 
