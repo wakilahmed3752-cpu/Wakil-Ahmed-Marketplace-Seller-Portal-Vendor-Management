@@ -4,7 +4,7 @@ const { q } = require("./db");
 const { wrap, requireRole } = require("./util");
 const { esc, csrfField } = require("./views");
 
-const graphVersion = () => process.env.META_GRAPH_VERSION || "v22.0";
+const graphVersion = () => process.env.META_GRAPH_VERSION || "";
 const callbackUrl = () => process.env.META_REDIRECT_URI || "https://seller.wakilahmed.com/integrations/meta/callback";
 const configured = () => Boolean(process.env.META_APP_ID && process.env.META_APP_SECRET && process.env.META_TOKEN_ENCRYPTION_KEY);
 
@@ -106,7 +106,7 @@ router.get("/integrations/meta/callback", wrap(async (req, res) => {
 router.get("/seller/advertising/meta/select", requireRole("seller"), (req, res) => {
   const pending = req.session.metaPending;
   if (!pending) return res.redirect("/seller/advertising");
-  const options = pending.accounts.filter((a) => a.status === 1 || a.status === 0)
+  const options = pending.accounts.filter((a) => a.status === 1)
     .map((a) => `<option value="${esc(a.id)}">${esc(a.name)} · ${esc(a.id)} ${a.currency ? "· " + esc(a.currency) : ""}</option>`).join("");
   if (!options) return res.page("Choose Meta ad account", "<div class='card'><h1>No eligible ad accounts found</h1><p class='muted'>The Facebook profile did not return an active ad account with the permissions granted. Check your Business portfolio access and try again.</p><a href='/seller/advertising'>Return to Advertising</a></div>");
   res.page("Choose Meta ad account", `<div class="card narrow"><h1>Choose your ad account</h1><p class="muted">Select the Meta ad account you want linked to this seller profile.</p><form method="post" action="/seller/advertising/meta/select">${csrfField(res.locals.csrf)}<label>Ad account<select name="account_id" required>${options}</select></label><button class="btn btn-block" type="submit">Save connection</button></form></div>`);
