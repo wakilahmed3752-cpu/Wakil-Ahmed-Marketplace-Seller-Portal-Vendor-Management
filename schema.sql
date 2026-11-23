@@ -61,3 +61,7 @@ CREATE TABLE IF NOT EXISTS "session" (
   "expire" TIMESTAMP(6) NOT NULL
 );
 CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
+
+-- Employee accounts are separate from administrators and sellers.
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('seller','admin','employee'));
