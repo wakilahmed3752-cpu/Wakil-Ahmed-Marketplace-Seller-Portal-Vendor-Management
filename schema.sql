@@ -65,3 +65,15 @@ CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
 -- Employee accounts are separate from administrators and sellers.
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
 ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('seller','admin','employee'));
+
+
+-- Each seller has one isolated TikTok Ads authorization. Access tokens are
+-- encrypted by the application before they are stored in this table.
+CREATE TABLE IF NOT EXISTS seller_tiktok_ads (
+  user_id          INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  token_ciphertext TEXT NOT NULL,
+  token_iv         TEXT NOT NULL,
+  token_auth_tag   TEXT NOT NULL,
+  advertiser_ids   JSONB NOT NULL DEFAULT '[]'::jsonb,
+  connected_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
