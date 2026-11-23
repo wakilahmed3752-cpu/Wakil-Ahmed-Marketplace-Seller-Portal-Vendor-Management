@@ -41,8 +41,8 @@ app.use((req, res, next) => {
     const ok = t.length === req.session.csrf.length && crypto.timingSafeEqual(Buffer.from(t), Buffer.from(req.session.csrf));
     if (!ok) return res.status(403).send("Your session expired. Go back, refresh the page, and try again.");
   }
-  res.page = (title, body) =>
-    res.send(layout({ title, user: req.session.user, body, csrf: res.locals.csrf, flash: res.locals.flash }));
+  res.page = (title, body, seo = {}) =>
+    res.send(layout({ title, user: req.session.user, body, csrf: res.locals.csrf, flash: res.locals.flash, pathname: req.path, seo }));
   next();
 });
 
