@@ -12,7 +12,7 @@ const emailOk = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && e.length <= 254;
 router.get("/", (req, res) => {
   const u = req.session.user;
   if (!u) return res.redirect("/login");
-  res.redirect(u.role === "admin" ? "/admin" : "/seller");
+  res.redirect(u.role === "seller" ? "/seller" : "/admin");
 });
 
 // ---------- Register ----------
