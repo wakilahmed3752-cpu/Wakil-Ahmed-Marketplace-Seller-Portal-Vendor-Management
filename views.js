@@ -24,7 +24,7 @@ function layout({ title, user, body, csrf, flash, pathname = "/", seo = {} }) {
     nav = '<a href="/admin" class="navlink">Overview</a><a href="/admin/sellers" class="navlink">Sellers</a><a href="/admin/earnings" class="navlink">Earnings</a>' + out;
   } else {
     section = "Seller workspace";
-    nav = '<a href="/seller" class="navlink">Dashboard</a><a href="/seller/products" class="navlink">Products</a><a href="/seller/orders" class="navlink">Orders</a><a href="/seller/inventory" class="navlink">Inventory</a><a href="/seller/advertising/tiktok" class="navlink">Advertising</a><a href="/seller/profile" class="navlink">Payout details</a>' + out;
+    nav = '<a href="/seller" class="navlink">Dashboard</a><a href="/seller/products" class="navlink">Products</a><a href="/seller/orders" class="navlink">Orders</a><a href="/seller/inventory" class="navlink">Inventory</a><a href="/seller/advertising" class="navlink">Advertising</a><a href="/seller/profile" class="navlink">Payout details</a>' + out;
   }
 
   const flashHtml = flash ? '<div class="flash flash-' + esc(flash.type) + '" role="status">' + esc(flash.text) + "</div>" : "";
