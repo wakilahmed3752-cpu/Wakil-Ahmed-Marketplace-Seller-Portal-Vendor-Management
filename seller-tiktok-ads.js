@@ -53,9 +53,10 @@ router.get("/callback", wrap(async (req, res) => {
   const expected = req.session.tiktokAdsState || "";
   const actual = String(req.query.state || "");
   const userId = req.session.user && req.session.user.id;
+  const expectedUserId = req.session.tiktokAdsUser;
   delete req.session.tiktokAdsState;
   delete req.session.tiktokAdsUser;
-  if (!expected || !actual || !userId || expected.length !== actual.length || !crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(actual))) {
+  if (!expected || !actual || !userId || expectedUserId !== userId || expected.length !== actual.length || !crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(actual))) {
     return res.status(400).page("TikTok authorization failed", "<div class='card'><h1>Authorization could not be verified</h1><p>Return to your seller dashboard and try connecting again.</p></div>");
   }
   const authCode = String(req.query.auth_code || "");
