@@ -109,4 +109,44 @@ router.post(
 router.get("/products", (_req, res) => res.page("Products", '<h1>Products</h1><div class="card"><h2>Shopify product connection required</h2><p class="muted">Your seller account can view orders and earnings today. Product submissions and Shopify catalog publishing are not connected yet, so this page will not create or change products.</p><p class="small muted">Next step: connect a secure Shopify app integration with product approval rules before enabling listings.</p></div>'));
 router.get("/inventory", (_req, res) => res.page("Inventory", '<h1>Inventory</h1><div class="card"><h2>Inventory sync not enabled</h2><p class="muted">Live stock quantities are not currently synchronized with Shopify. This page is a placeholder until inventory permissions and stock update workflows are implemented.</p><p class="small muted">No inventory quantities have been changed.</p></div>'));
 
+
+// Seller marketing workspace: planning tools only. Publishing and email delivery
+// remain disabled until approved platform connections and delivery workflows exist.
+router.get("/marketing", (_req, res) => {
+  const platforms = [
+    ["TikTok", "Short-form video ideas, hooks, captions and posting calendars"],
+    ["Facebook", "Page content, product announcements and community updates"],
+    ["Instagram", "Reels, captions, Stories and product-focused content"],
+    ["Pinterest", "Search-friendly Pins, board ideas and product descriptions"]
+  ];
+  const platformCards = platforms.map(([name, detail]) =>
+    '<div class="card"><div class="seller-head"><div><h2>' + name + '</h2><p class="muted small">' + detail + '</p></div><span class="pill pill-pending">Planning only</span></div></div>'
+  ).join("");
+  res.page("Marketing", `
+<h1>Marketing workspace</h1>
+<p class="muted">Plan product marketing and review channel performance from one place. These tools help prepare content; they do not publish or send messages.</p>
+<div class="card">
+  <h2>Product titles, descriptions and search optimization</h2>
+  <p class="muted">Prepare clearer product titles, product descriptions, keyword ideas, search snippets and image alt text before updating a product listing.</p>
+  <span class="pill pill-pending">Planning tools</span>
+</div>
+<h2>Social content planning</h2>
+<div class="stats marketing-platforms">${platformCards}</div>
+<div class="card">
+  <h2>Email campaign planning and customer announcements</h2>
+  <p class="muted">Draft campaign themes, customer announcements, subject lines and message schedules for review.</p>
+  <span class="pill pill-pending">Drafts only</span>
+</div>
+<div class="card">
+  <h2>Campaign performance review</h2>
+  <p class="muted">Review reach, engagement, clicks and conversions when supported channel data is connected and available.</p>
+  <span class="pill pill-pending">Channel data not connected</span>
+</div>
+<div class="card">
+  <h2>Publishing and email permissions</h2>
+  <p class="muted">This workspace does not publish social posts or send emails. Those actions remain disabled until an approved platform connection is configured and the required permissions are granted.</p>
+  <p class="small muted">No social posts have been published and no customer emails have been sent from this workspace.</p>
+</div>`);
+});
+
 module.exports = router;
