@@ -40,7 +40,8 @@ app.use("/",require("./auth"));
 app.use("/seller/advertising",require("./advertising"));
 // Dedicated catalog and payout-profile routes take precedence over legacy placeholders.
 app.use("/",require("./catalog"));
-app.use("/seller/profile",require("./seller-payout-profile"));\napp.use("/seller/stripe",require("./stripe-connect"));
+app.use("/seller/profile",require("./seller-payout-profile"));
+app.use("/seller/stripe",require("./stripe-connect"));
 app.use("/seller",require("./seller"));
 app.use("/seller/advertising/tiktok",require("./seller-tiktok-ads"));
 app.use("/admin",require("./admin"));
