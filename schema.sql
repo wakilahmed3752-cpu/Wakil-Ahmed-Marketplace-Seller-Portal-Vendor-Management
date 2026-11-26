@@ -74,3 +74,10 @@ CREATE TABLE IF NOT EXISTS seller_products (
 );
 CREATE INDEX IF NOT EXISTS seller_products_seller_idx ON seller_products(seller_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS seller_products_review_idx ON seller_products(status,created_at DESC);
+
+-- Stripe Connect seller payout onboarding. Only provider account references/status are stored here.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_account_id TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_account_country CHAR(2);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_account_details_submitted BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_account_payouts_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+CREATE UNIQUE INDEX IF NOT EXISTS users_stripe_account_uq ON users(stripe_account_id) WHERE stripe_account_id IS NOT NULL;
