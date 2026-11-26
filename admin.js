@@ -105,7 +105,7 @@ router.get(
   "/payouts",
   wrap(async (req, res) => {
     const { rows: due } = await q(
-      `select u.id, u.shop_name, u.name, u.payout_method, u.payout_details,
+      `select u.id, u.shop_name, u.name, u.payout_method,
               sum(e.earning_cents)::bigint owed, max(e.currency) cur
        from users u join earnings e on e.user_id=u.id and e.status='unpaid'
        group by u.id having sum(e.earning_cents) > 0 order by owed desc`);
@@ -121,7 +121,7 @@ ${
         .map(
           (d) => `<div class="card"><div class="seller-head"><div><h2>${esc(d.shop_name)}</h2>
   <p class="muted">${esc(d.payout_method || "No payout method set")}</p>
-  <pre class="details">${esc(d.payout_details || "No payout details provided yet.")}</pre></div>
+  <p class="muted small">Bank account details are not collected in this portal. Use a secure payout provider when one is connected.</p></div>
   <div class="amount">${money(d.owed, d.cur || "")}</div></div>
   <form method="post" action="/admin/payouts/${d.id}" class="row">${csrfField(csrf)}
     <input name="reference" placeholder="Transfer reference (optional)" maxlength="100">
