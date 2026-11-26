@@ -15,7 +15,7 @@ const seller = requireRole("seller");
 const admin = requireRole("admin");
 
 router.use("/seller", seller);
-router.get("/seller", wrap(async (req, res) => {
+router.get("/seller/products", wrap(async (req, res) => {
   const { rows } = await q("select id,title,category,price,currency,quantity,status,created_at from seller_products where seller_id=$1 order by id desc", [req.session.user.id]);
   const list = rows.length ? '<div class="scroll"><table><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Submitted</th></tr>' + rows.map(p => '<tr><td><strong>' + esc(p.title) + '</strong></td><td>' + esc(p.category) + '</td><td>' + Number(p.price).toFixed(2) + ' ' + esc(p.currency) + '</td><td>' + p.quantity + '</td><td>' + statusPill(p.status) + '</td><td>' + date(p.created_at) + '</td></tr>').join("") + '</table></div>' : '<p class="muted">You have not submitted any products yet. Use the form below to add your first listing.</p>';
   res.page("Products", '<h1>My products</h1><p class="muted">Sellers worldwide can submit products for marketplace review. Every listing is reviewed by the marketplace admin before approval. Approval here does not publish the product to Shopify.</p><div class="card"><h2>Your listings</h2>' + list + '</div>' + productForm(res.locals.csrf));
@@ -34,7 +34,7 @@ function productForm(csrf) {
     '<label>Product image URL (HTTPS only)<input name="image_url" type="url" maxlength="1000" placeholder="https://..."></label>' +
     '<p class="muted small">New listings are saved as Pending review. Do not enter bank account details here.</p><button class="btn">Submit product for review</button></form></div>';
 }
-router.post("/seller", wrap(async (req, res) => {
+router.post("/seller/products", wrap(async (req, res) => {
   const b = req.body;
   const title = (b.title || "").trim().slice(0,160);
   const description = (b.description || "").trim().slice(0,5000);
@@ -69,14 +69,14 @@ router.post("/seller", wrap(async (req, res) => {
 }));
 
 router.use("/admin", admin);
-router.get("/admin", wrap(async (req,res) => {
+router.get("/admin/products", wrap(async (req,res) => {
   const { rows } = await q(`select p.*,u.shop_name,u.name seller_name,u.email seller_email
     from seller_products p join users u on u.id=p.seller_id
     order by (p.status='pending') desc,p.created_at desc limit 500`);
   const cards = rows.length ? rows.map(p => '<div class="card"><div class="seller-head"><div><h2>' + esc(p.title) + '</h2><p class="muted">' + esc(p.shop_name) + ' · ' + esc(p.seller_name) + ' · ' + esc(p.seller_email) + '</p><p class="muted small">' + esc(p.category) + ' · ' + Number(p.price).toFixed(2) + ' ' + esc(p.currency) + ' · Stock ' + p.quantity + ' · ' + esc(p.seller_country) + '</p></div>' + statusPill(p.status) + '</div><p>' + esc(p.description) + '</p><p class="muted small">Ships to: ' + esc(p.ships_to) + (p.sku ? ' · SKU: ' + esc(p.sku) : '') + (p.image_url ? ' · <a href="' + esc(p.image_url) + '" target="_blank" rel="noopener">Product image</a>' : '') + '</p>' + (p.status === "pending" ? '<div class="row"><form method="post" action="/admin/products/' + p.id + '/review">' + csrfField(res.locals.csrf) + '<input type="hidden" name="decision" value="approved"><button class="btn btn-sm">Approve listing</button></form><form method="post" action="/admin/products/' + p.id + '/review">' + csrfField(res.locals.csrf) + '<input type="hidden" name="decision" value="rejected"><button class="btn btn-sm btn-ghost">Reject</button></form></div>' : '') + '</div>').join("") : '<div class="card"><p class="muted">No product submissions yet.</p></div>';
   res.page("Product review", '<h1>Product review</h1><p class="muted">Review seller submissions from all supported countries. Approving a listing records marketplace approval only. Shopify publishing and seller payouts remain disconnected.</p>' + cards);
 }));
-router.post("/admin/:id/review", wrap(async (req,res) => {
+router.post("/admin/products/:id/review", wrap(async (req,res) => {
   const decision = req.body.decision;
   const id = Number.parseInt(req.params.id,10);
   if (!Number.isInteger(id) || !["approved","rejected"].includes(decision)) {
