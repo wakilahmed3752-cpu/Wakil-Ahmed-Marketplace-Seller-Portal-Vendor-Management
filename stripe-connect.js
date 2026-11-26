@@ -1,5 +1,4 @@
 const router = require("express").Router();
-const crypto = require("crypto");
 const { q } = require("./db");
 const { wrap, requireRole } = require("./util");
 const { esc, csrfField } = require("./views");
