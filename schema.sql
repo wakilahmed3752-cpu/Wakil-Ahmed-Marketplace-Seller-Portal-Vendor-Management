@@ -110,3 +110,30 @@ CREATE TABLE IF NOT EXISTS portal_visits (
 CREATE INDEX IF NOT EXISTS portal_visits_seen_idx ON portal_visits(last_seen);
 CREATE INDEX IF NOT EXISTS portal_visits_user_date_idx ON portal_visits(user_id, visit_date);
 CREATE INDEX IF NOT EXISTS portal_visits_country_idx ON portal_visits(country);
+
+
+-- Seller-submitted catalog listings. Approval is internal until Shopify Admin API publishing is configured.
+CREATE TABLE IF NOT EXISTS seller_product_submissions (
+  id BIGSERIAL PRIMARY KEY,
+  seller_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL CHECK (char_length(title) BETWEEN 3 AND 160),
+  description TEXT NOT NULL CHECK (char_length(description) BETWEEN 10 AND 10000),
+  category TEXT NOT NULL CHECK (char_length(category) BETWEEN 2 AND 80),
+  price_cents INTEGER NOT NULL CHECK (price_cents > 0),
+  sku TEXT,
+  inventory_quantity INTEGER NOT NULL DEFAULT 0 CHECK (inventory_quantity >= 0),
+  image_url TEXT,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
+  admin_note TEXT,
+  reviewed_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  reviewed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS seller_product_submissions_seller_idx
+  ON seller_product_submissions(seller_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS seller_product_submissions_status_idx
+  ON seller_product_submissions(status, created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS seller_product_submissions_sku_uq
+  ON seller_product_submissions(seller_id, lower(sku))
+  WHERE sku IS NOT NULL AND sku <> '';
