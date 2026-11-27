@@ -31,6 +31,7 @@ function layout({ title, user, body, csrf, flash, pathname = "/", seo = {} }) {
   const shellClass = user ? "app-shell authenticated" : "app-shell public-shell";
   return '<!doctype html><html lang="en"><head>' +
     '<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">' +
+    '<meta name="google-site-verification" content="vEPvJ9X2RTINH6Ss6769IwHZp1SA99NBkk2cPNFmcWY">' +
     '<meta name="theme-color" content="#202321">' +
     '<meta name="description" content="' + esc(seo.description || (seo.indexable ? "Apply to become a seller on Wakil Ahmed Marketplace." : "Wakil Ahmed Marketplace seller portal.")) + '">' +
     '<meta name="robots" content="' + (seo.indexable && !user ? "index,follow" : "noindex,nofollow") + '">' +
