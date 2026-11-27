@@ -149,4 +149,33 @@ router.get("/marketing", (_req, res) => {
 </div>`);
 });
 
+
+router.get("/traffic", wrap(async (req, res) => {
+  const id = req.session.user.id;
+  const { rows: [totals] } = await q(`
+    select count(*) filter (where visit_date=current_date)::int today,
+           count(*) filter (where visit_date >= current_date-6)::int last7,
+           count(*) filter (where visit_date >= current_date-29)::int last30,
+           count(*)::int all_time,
+           count(distinct visitor_hash) filter (where last_seen >= now()-interval '5 minutes')::int live
+    from portal_visits where user_id=$1`, [id]);
+  const { rows: countries } = await q(`
+    select country, count(*)::int visits from portal_visits
+    where user_id=$1 and visit_date >= current_date-29
+    group by country order by visits desc, country asc limit 15`, [id]);
+  const countryRows = countries.length ? countries.map(c => `<tr><td>${esc(c.country)}</td><td class="r">${c.visits}</td></tr>`).join("") : '<tr><td colspan="2" class="muted">Your country report will appear as visitors use your seller account.</td></tr>';
+  res.page("Account traffic", `
+<h1>Account traffic</h1>
+<p class="muted">Traffic recorded while signed in to your seller account. This report is private to your account and does not show other sellers' activity.</p>
+<div class="stats">
+ <div class="stat"><span>Live account visitors</span><strong>${totals.live}</strong></div>
+ <div class="stat"><span>Visits today</span><strong>${totals.today}</strong></div>
+ <div class="stat"><span>Last 7 days</span><strong>${totals.last7}</strong></div>
+ <div class="stat"><span>Last 30 days</span><strong>${totals.last30}</strong></div>
+</div>
+<div class="card"><h2>All-time visits</h2><strong>${totals.all_time}</strong><p class="muted small">Unique signed-in browser visits per day since tracking was enabled.</p></div>
+<div class="card"><h2>Visitors by country</h2><p class="muted small">Last 30 days</p><div class="scroll"><table><tr><th>Country</th><th class="r">Visits</th></tr>${countryRows}</table></div></div>
+<div class="card"><p class="muted small">This counts activity inside your signed-in seller workspace, not public product-page visitors. Country is estimated using ipwho.is. Raw IP addresses are not stored.</p></div>`);
+}));
+
 module.exports = router;
