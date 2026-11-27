@@ -75,6 +75,7 @@ app.use("/", require("./auth"));
 app.use("/seller/advertising", require("./advertising"));
 app.use("/seller", require("./seller"));
 app.use("/seller/advertising/tiktok", require("./seller-tiktok-ads"));
+app.use("/admin/advertising", require("./admin-advertising"));
 app.use("/admin", require("./admin"));
 
 app.use((req, res) => res.status(404).page("Not found", "<div class='card'><h1>Page not found</h1><p><a href='/'>Go home</a></p></div>"));
