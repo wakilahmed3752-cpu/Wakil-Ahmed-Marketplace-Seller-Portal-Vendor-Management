@@ -223,4 +223,35 @@ router.post("/team", wrap(async (req, res) => {
 router.get("/marketing", (_req, res) => res.page("Marketing", '<h1>Marketing workspace</h1><p class="muted">Plan and review marketplace marketing activity from one place.</p><div class="stats"><div class="stat"><span>Organic channels</span><strong>SEO & social</strong></div><div class="stat"><span>Campaign planning</span><strong>Available</strong></div><div class="stat"><span>Connected accounts</span><strong>Not connected</strong></div></div><div class="card"><h2>Marketing options</h2><ul><li>Product titles, descriptions and search optimization</li><li>Social content planning for TikTok, Facebook, Instagram and Pinterest</li><li>Email campaign planning and customer announcements</li><li>Campaign performance review when channel data is connected</li></ul><p class="muted small">This workspace does not publish posts or send emails until an approved platform connection is configured.</p></div>'));
 router.get("/advertising", (_req, res) => res.page("Advertising", '<h1>Advertising workspace</h1><p class="muted">Organize paid advertising options without changing any live campaigns.</p><div class="stats"><div class="stat"><span>Google Ads</span><strong>Not connected</strong></div><div class="stat"><span>Meta Ads</span><strong>Not connected</strong></div><div class="stat"><span>TikTok Ads</span><strong>Not connected</strong></div></div><div class="card"><h2>Advertising options</h2><ul><li>Google Search and Shopping campaigns</li><li>Facebook and Instagram campaigns</li><li>TikTok advertising campaigns</li><li>Budget, creative and performance planning</li></ul><p class="muted small">No advertising account has been connected and no campaign or spend has been created. Connect an advertising account before launching ads.</p></div>'));
 
+
+router.use("/traffic", requireRole("admin"));
+
+// ---------- Portal traffic analytics ----------
+router.get("/traffic", wrap(async (req, res) => {
+  const { rows: [totals] } = await q(`
+    select count(*) filter (where visit_date=current_date)::int today,
+           count(*) filter (where visit_date >= current_date-6)::int last7,
+           count(*) filter (where visit_date >= current_date-29)::int last30,
+           count(*)::int all_time,
+           count(distinct visitor_hash) filter (where last_seen >= now()-interval '5 minutes')::int live
+    from portal_visits`);
+  const { rows: countries } = await q(`
+    select country, count(*)::int visits
+    from portal_visits where visit_date >= current_date-29
+    group by country order by visits desc, country asc limit 15`);
+  const countryRows = countries.length ? countries.map(c => `<tr><td>${esc(c.country)}</td><td class="r">${c.visits}</td></tr>`).join("") : '<tr><td colspan="2" class="muted">Country data will appear as visitors use the portal.</td></tr>';
+  res.page("Portal traffic", `
+<h1>Portal traffic</h1>
+<p class="muted">Visitor estimates for the entire seller portal. A live visitor is a browser active in the last five minutes. Repeat visits from the same browser count once per day.</p>
+<div class="stats">
+ <div class="stat"><span>Live visitors now</span><strong>${totals.live}</strong></div>
+ <div class="stat"><span>Visits today</span><strong>${totals.today}</strong></div>
+ <div class="stat"><span>Last 7 days</span><strong>${totals.last7}</strong></div>
+ <div class="stat"><span>Last 30 days</span><strong>${totals.last30}</strong></div>
+</div>
+<div class="card"><h2>All-time daily visitors</h2><strong>${totals.all_time}</strong><p class="muted small">Unique browser visits per day since tracking was enabled.</p></div>
+<div class="card"><h2>Visitors by country</h2><p class="muted small">Last 30 days</p><div class="scroll"><table><tr><th>Country</th><th class="r">Visits</th></tr>${countryRows}</table></div></div>
+<div class="card"><p class="muted small">Country is estimated from the visitor's IP address using ipwho.is. The portal stores a one-way hashed visitor identifier, not the raw IP address. Existing visits before this feature launches are not available.</p></div>`);
+}));
+
 module.exports = router;
