@@ -74,3 +74,10 @@ pre.details{white-space:pre-wrap;background:#f6f4ed;border-radius:8px;padding:10
 .password-toggle{flex:none;min-width:58px;padding:0 13px;border:0;border-left:1px solid var(--line);background:#faf9f4;color:#6b5427;font:600 13px inherit;font-family:inherit;cursor:pointer}
 .password-toggle:hover{background:var(--gold-soft);color:#443719}
 .password-toggle:focus-visible{outline:2px solid var(--gold);outline-offset:-3px}
+
+.list-item-cta{display:flex;align-items:center;justify-content:space-between;gap:16px;border-color:#d8c18c;background:#fffdf7}
+.list-item-cta h2{margin-bottom:4px}
+.nav-list-item{background:rgba(199,164,92,.18);color:#f1d99f!important;font-weight:700}
+.nav-list-item:hover{background:rgba(199,164,92,.28)!important;color:#fff!important}
+.product-review{overflow-wrap:anywhere}
+@media(max-width:680px){.list-item-cta{align-items:flex-start;flex-direction:column}.list-item-cta .btn{width:100%}}
