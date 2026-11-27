@@ -109,8 +109,55 @@ router.post(
 // Seller product submissions are isolated by seller_id and require admin review.
 router.get("/products", wrap(async (req, res) => {
   const { rows } = await q("select id, title, category, price_cents, status, created_at, admin_note from seller_product_submissions where seller_id=$1 order by created_at desc", [req.session.user.id]);
-  const list = rows.length ? '<div class="scroll"><table><tr><th>Product</th><th>Category</th><th class="r">Price</th><th>Status</th><th>Submitted</th><th>Admin note</th></tr>' +
-    rows.map(p => '<tr><td>' + esc(p.title) + '</td><td>' + esc(p.category) + '</td><td class="r">
+  const list = rows.length
+    ? '<div class="scroll"><table><tr><th>Product</th><th>Category</th><th class="r">Price</th><th>Status</th><th>Submitted</th><th>Admin note</th></tr>' +
+      rows.map(p => '<tr><td>' + esc(p.title) + '</td><td>' + esc(p.category) + '</td><td class="r">$' + money(p.price_cents) + '</td><td><span class="pill pill-' + esc(p.status) + '">' + esc(p.status) + '</span></td><td>' + date(p.created_at) + '</td><td>' + esc(p.admin_note || '—') + '</td></tr>').join('') +
+      '</table></div>'
+    : '<p class="muted">You have not submitted any products yet. Select “List an Item” to get started.</p>';
+  res.page("Products", '<div class="section-head"><div><h1>My product listings</h1><p class="muted">Submit products for marketplace admin review.</p></div><a class="btn" href="/seller/products/new">List an Item</a></div><div class="card">' + list + '</div><p class="muted small">Approval in this portal does not publish a product to the public Shopify store. Shopify publishing will be enabled after the secure Shopify Admin API integration is configured.</p>');
+}));
+
+router.get("/products/new", (_req, res) => res.page("List an Item",
+  '<h1>List an Item</h1><p class="muted">Enter your product details. Your listing will be reviewed by the marketplace admin before it can be published.</p>' +
+  '<div class="card narrow"><form method="post" action="/seller/products">' + csrfField(res.locals.csrf) +
+  '<label>Product name<input name="title" required minlength="3" maxlength="160" placeholder="Enter product name"></label>' +
+  '<label>Category<input name="category" required minlength="2" maxlength="80" placeholder="Example: Household Essentials"></label>' +
+  '<label>Product description<textarea name="description" required minlength="10" maxlength="10000" rows="6" placeholder="Describe the product, its features and what is included"></textarea></label>' +
+  '<label>Price (USD)<input name="price" type="number" required min="0.01" max="1000000" step="0.01" placeholder="0.00"></label>' +
+  '<label>SKU (optional)<input name="sku" maxlength="80" placeholder="Your product SKU"></label>' +
+  '<label>Available quantity<input name="inventory_quantity" type="number" required min="0" max="1000000" step="1" value="0"></label>' +
+  '<label>Product image URL (optional)<input name="image_url" type="url" maxlength="1000" placeholder="https://..."></label>' +
+  '<button class="btn btn-block" type="submit">Submit for Approval</button></form></div>'));
+
+router.post("/products", wrap(async (req, res) => {
+  const title = (req.body.title || "").trim().slice(0, 160);
+  const category = (req.body.category || "").trim().slice(0, 80);
+  const description = (req.body.description || "").trim().slice(0, 10000);
+  const price = Number(req.body.price);
+  const quantity = Number(req.body.inventory_quantity);
+  const sku = (req.body.sku || "").trim().slice(0, 80) || null;
+  const imageUrl = (req.body.image_url || "").trim().slice(0, 1000) || null;
+  if (title.length < 3 || category.length < 2 || description.length < 10 ||
+      !Number.isFinite(price) || price <= 0 || price > 1000000 ||
+      !Number.isInteger(quantity) || quantity < 0 || quantity > 1000000 ||
+      (imageUrl && !/^https:\/\//i.test(imageUrl))) {
+    req.session.flash = { type: "error", text: "Please check the product details. Price must be positive, quantity must be a whole number, and image links must use HTTPS." };
+    return res.redirect("/seller/products/new");
+  }
+  try {
+    await q("insert into seller_product_submissions (seller_id,title,description,category,price_cents,sku,inventory_quantity,image_url) values ($1,$2,$3,$4,$5,$6,$7,$8)",
+      [req.session.user.id, title, description, category, Math.round(price * 100), sku, quantity, imageUrl]);
+  } catch (e) {
+    if (e.code === "23505") {
+      req.session.flash = { type: "error", text: "That SKU is already used by one of your submitted products. Please enter a different SKU." };
+      return res.redirect("/seller/products/new");
+    }
+    throw e;
+  }
+  req.session.flash = { type: "ok", text: "Your product was submitted successfully and is waiting for admin review." };
+  res.redirect("/seller/products");
+}));
+
 router.get("/inventory", (_req, res) => res.page("Inventory", '<h1>Inventory</h1><div class="card"><h2>Inventory sync not enabled</h2><p class="muted">Live stock quantities are not currently synchronized with Shopify. This page is a placeholder until inventory permissions and stock update workflows are implemented.</p><p class="small muted">No inventory quantities have been changed.</p></div>'));
 
 
