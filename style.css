@@ -65,3 +65,12 @@ pre.details{white-space:pre-wrap;background:#f6f4ed;border-radius:8px;padding:10
 .sales-card{padding-bottom:24px}.section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.section-head h2{margin-bottom:3px}.chart-key{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:7px}.chart-key i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--gold)}.sales-chart{min-height:190px;display:flex;align-items:flex-end;gap:clamp(10px,3vw,28px);padding:22px 8px 0;border-bottom:1px solid var(--line)}.chart-col{height:160px;min-width:0;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:7px}.chart-value{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.chart-bar-wrap{height:112px;width:min(44px,70%);display:flex;align-items:flex-end;background:#f3f0e7;border-radius:8px 8px 3px 3px;overflow:hidden}.chart-bar{width:100%;background:linear-gradient(180deg,#d7bd82,#a8894c);border-radius:7px 7px 2px 2px;min-height:4px}.chart-col>span{font-size:11px;color:var(--muted);font-weight:600}
 
 .ad-connect-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.ad-connect-head h2{margin-bottom:5px}.advertiser-list{padding-left:20px}.advertiser-list li{margin:8px 0}.ad-benefits{padding-left:20px;color:var(--muted);margin:12px 0 20px}.ad-benefits li{margin:7px 0}
+
+/* Accessible show/hide control for every password field across seller, employee and admin pages. */
+.password-control{display:flex;align-items:stretch;width:100%;margin-top:6px;border:1px solid #d8d7cf;border-radius:9px;background:#fff;overflow:hidden}
+.password-control:focus-within{outline:2px solid rgba(199,164,92,.7);outline-offset:1px;border-color:var(--gold)}
+.password-control input[type="password"],.password-control input[type="text"]{flex:1;min-width:0;width:100%;margin:0;border:0;border-radius:0;outline:0;box-shadow:none}
+.password-control input:focus{outline:0;border-color:transparent}
+.password-toggle{flex:none;min-width:58px;padding:0 13px;border:0;border-left:1px solid var(--line);background:#faf9f4;color:#6b5427;font:600 13px inherit;font-family:inherit;cursor:pointer}
+.password-toggle:hover{background:var(--gold-soft);color:#443719}
+.password-toggle:focus-visible{outline:2px solid var(--gold);outline-offset:-3px}
