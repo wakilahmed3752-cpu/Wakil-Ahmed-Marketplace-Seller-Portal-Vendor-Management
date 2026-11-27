@@ -48,6 +48,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Record privacy-conscious page traffic after the session and request helpers are ready.
+app.use(require("./traffic").track);
+
 app.get("/robots.txt", (_req, res) => {
   res.type("text/plain").send([
     "User-agent: *",
