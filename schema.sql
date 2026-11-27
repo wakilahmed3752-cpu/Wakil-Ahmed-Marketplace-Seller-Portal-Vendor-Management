@@ -93,3 +93,20 @@ CREATE TABLE IF NOT EXISTS seller_ad_accounts (
   UNIQUE (seller_id, provider)
 );
 CREATE INDEX IF NOT EXISTS seller_ad_accounts_seller_idx ON seller_ad_accounts(seller_id);
+
+-- Privacy-conscious portal analytics. Raw IP addresses are never stored.
+CREATE TABLE IF NOT EXISTS portal_visits (
+  id BIGSERIAL PRIMARY KEY,
+  visitor_hash TEXT NOT NULL,
+  visit_date DATE NOT NULL,
+  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  country TEXT NOT NULL DEFAULT 'Unknown',
+  country_code TEXT,
+  last_path TEXT,
+  last_seen TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (visitor_hash, visit_date)
+);
+CREATE INDEX IF NOT EXISTS portal_visits_seen_idx ON portal_visits(last_seen);
+CREATE INDEX IF NOT EXISTS portal_visits_user_date_idx ON portal_visits(user_id, visit_date);
+CREATE INDEX IF NOT EXISTS portal_visits_country_idx ON portal_visits(country);
