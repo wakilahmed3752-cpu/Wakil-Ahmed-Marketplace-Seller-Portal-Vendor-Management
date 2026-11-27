@@ -13,7 +13,7 @@ app.set("trust proxy", 1); // Render sits behind a proxy
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
-      "script-src": ["'self'", "'unsafe-inline'", "https://analytics.ahrefs.com"],
+      "script-src": ["'self'", "'unsafe-inline'", "https://analytics.ahrefs.com", "https://www.googletagmanager.com"],
     },
   },
 }));
