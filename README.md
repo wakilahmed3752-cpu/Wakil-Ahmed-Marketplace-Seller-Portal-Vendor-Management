@@ -29,8 +29,11 @@ Shopify admin → Settings → Notifications → Webhooks. Add two, format JSON:
 Webhooks created there are signed with your store's webhook signing secret; use that
 value for `SHOPIFY_WEBHOOK_SECRET` (shown at the top of the same Webhooks page).
 
+## Seller product submissions
+Approved sellers can submit product details from `/seller/products/new`. Submissions are isolated by seller account and enter the admin review queue at `/admin/products`. Admins can approve or reject submissions and leave feedback. Approval is recorded in the portal only; creating Shopify draft products and publishing them requires a separately configured Shopify Admin API app with appropriate product permissions. The existing Shopify webhook secret is not an Admin API access token.
+
 ## Not built yet
-Seller product listing (draft products sent to Shopify), password reset by email.
+Shopify Admin API product creation and publishing, password reset by email.
 
 
 ## Seller TikTok Ads connection
