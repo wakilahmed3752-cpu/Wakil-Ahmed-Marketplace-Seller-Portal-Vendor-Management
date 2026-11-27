@@ -43,6 +43,7 @@ function layout({ title, user, body, csrf, flash, pathname = "/", seo = {} }) {
     '<meta property="og:image:alt" content="Wakil Ahmed Marketplace official logo">' +
     '<title>' + esc(title) + " · " + esc(BRAND) + '</title>' +
     '<link rel="icon" type="image/png" sizes="48x48" href="/static/favicon.png"><link rel="apple-touch-icon" href="/static/logo.png">' +
+    '<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-NH522FRT"></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag("js", new Date());</script>' +
     '<script src="https://analytics.ahrefs.com/analytics.js" data-key="pJg3XDq2yLH4TKcFbovOgQ"></script>' +
     '<link rel="stylesheet" href="/static/style.css"></head><body class="' + shellClass + '">' +
     '<header class="top"><div class="top-inner">' +
