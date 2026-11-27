@@ -43,6 +43,7 @@ function layout({ title, user, body, csrf, flash, pathname = "/", seo = {} }) {
     '<meta property="og:image:alt" content="Wakil Ahmed Marketplace official logo">' +
     '<title>' + esc(title) + " · " + esc(BRAND) + '</title>' +
     '<link rel="icon" type="image/png" sizes="48x48" href="/static/favicon.png"><link rel="apple-touch-icon" href="/static/logo.png">' +
+    '<script src="https://analytics.ahrefs.com/analytics.js" data-key="pJg3XDq2yLH4TKcFbovOgQ"></script>' +
     '<link rel="stylesheet" href="/static/style.css"></head><body class="' + shellClass + '">' +
     '<header class="top"><div class="top-inner">' +
     '<a class="brand" href="/" aria-label="Wakil Ahmed Marketplace home"><img src="/static/logo.png" alt="" width="42" height="42"><span><strong>' + esc(BRAND) + '</strong><small>' + section + '</small></span></a>' +
