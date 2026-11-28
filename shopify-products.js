@@ -5,7 +5,7 @@ const shopifyConfigured = () => Boolean(process.env.SHOPIFY_STORE_DOMAIN && proc
 async function graph(query, variables) {
   if (!shopifyConfigured()) throw new Error("Shopify Admin API credentials are not configured in Render.");
   const domain = process.env.SHOPIFY_STORE_DOMAIN.trim().replace(/^https?:\/\//i, "").replace(/\/$/, "");
-  const version = process.env.SHOPIFY_API_VERSION || "2025-10";
+  const version = process.env.SHOPIFY_API_VERSION || "2026-10";
   const response = await fetch("https://" + domain + "/admin/api/" + version + "/graphql.json", {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-Shopify-Access-Token": process.env.SHOPIFY_ADMIN_ACCESS_TOKEN },
