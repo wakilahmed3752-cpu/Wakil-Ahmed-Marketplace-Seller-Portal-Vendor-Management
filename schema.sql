@@ -149,3 +149,24 @@ ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS shopify_product_
 ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS shopify_product_url TEXT;
 ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS shopify_published_at TIMESTAMPTZ;
 ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS shopify_sync_error TEXT;
+
+-- Extended Shopify-style product listing details. Safe additive migration.
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS brand TEXT;
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS product_type TEXT;
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS subcategory TEXT;
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS tags TEXT[] NOT NULL DEFAULT '{}';
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS image_urls JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS compare_at_price_cents INTEGER;
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS cost_per_item_cents INTEGER;
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS barcode TEXT;
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS weight_value NUMERIC(10,3);
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS weight_unit TEXT NOT NULL DEFAULT 'lb';
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS requires_shipping BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS taxable BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS country_of_origin TEXT;
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS hs_code TEXT;
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS seo_title TEXT;
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS seo_description TEXT;
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS handle TEXT;
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS variant_options JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS variant_rows JSONB NOT NULL DEFAULT '[]'::jsonb;
