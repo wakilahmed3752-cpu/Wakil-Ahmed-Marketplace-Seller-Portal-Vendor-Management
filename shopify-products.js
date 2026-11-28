@@ -64,21 +64,6 @@ async function publishApprovedSubmission(id) {
     await q("update seller_product_submissions set shopify_product_id=$1, shopify_product_url=$2, shopify_sync_error=null, updated_at=now() where id=$3",
       [productId, result.product.onlineStoreUrl || null, id]);
 
-    const variant = result.product.variants?.nodes?.[0];
-    if (variant?.id) {
-      const updated = await graph(
-        "mutation UpdateMarketplaceVariant($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {" +
-        " productVariantsBulkUpdate(productId: $productId, variants: $variants) {" +
-        " productVariants { id } userErrors { field message } } }",
-        { productId, variants: [{
-          id: variant.id,
-          price: (Number(p.price_cents) / 100).toFixed(2),
-          inventoryItem: { sku: p.sku || ("WAM-" + p.id), tracked: true }
-        }] }
-      );
-      const errors = updated.productVariantsBulkUpdate.userErrors || [];
-      if (errors.length) throw new Error(errors.map(x => x.message).join("; "));
-    }
   }
 
   const productData = await graph(
