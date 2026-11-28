@@ -81,3 +81,11 @@ pre.details{white-space:pre-wrap;background:#f6f4ed;border-radius:8px;padding:10
 .nav-list-item:hover{background:rgba(199,164,92,.28)!important;color:#fff!important}
 .product-review{overflow-wrap:anywhere}
 @media(max-width:680px){.list-item-cta{align-items:flex-start;flex-direction:column}.list-item-cta .btn{width:100%}}
+
+
+/* Dedicated business vendor dashboard modules */
+.vendor-module-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:16px}
+.vendor-module{display:flex;flex-direction:column;gap:6px;padding:16px;border:1px solid var(--line);border-radius:11px;background:#fff;text-decoration:none;color:var(--ink);transition:border-color .15s,transform .15s}
+.vendor-module:hover{border-color:var(--gold);transform:translateY(-1px)}
+.vendor-module strong{font-size:14px;color:var(--charcoal)}
+.vendor-module span{font-size:12px;color:var(--muted)}
