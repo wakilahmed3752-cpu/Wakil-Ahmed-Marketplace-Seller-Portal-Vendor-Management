@@ -81,6 +81,7 @@ app.get("/sitemap.xml", (_req, res) => {
 app.get("/healthz", (_req, res) => res.send("ok"));
 app.get("/googlef773f6d44fa4fd9f.html", (_req, res) => res.type("text/plain").send("google-site-verification: googlef773f6d44fa4fd9f.html"));
 app.use("/", require("./auth"));
+app.use("/vendor", require("./vendor"));
 app.use("/seller/advertising", require("./advertising"));
 app.use("/seller", require("./seller"));
 app.use("/seller/advertising/tiktok", require("./seller-tiktok-ads"));
