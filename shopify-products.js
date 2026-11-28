@@ -86,9 +86,10 @@ async function publishApprovedSubmission(id) {
 
   let productId = p.shopify_product_id;
   if (!productId) {
-    const media = directImageUrl(p.image_url)
-      ? [{ mediaContentType: "IMAGE", originalSource: p.image_url, alt: p.title }]
-      : [];
+    const submittedImages = Array.isArray(p.image_urls) && p.image_urls.length
+      ? p.image_urls.map(x => ({ url: x.url, altText: x.altText || p.title })).filter(x => directImageUrl(x.url))
+      : (directImageUrl(p.image_url) ? [{ url: p.image_url, altText: p.title }] : []);
+    const media = submittedImages.map(x => ({ mediaContentType: "IMAGE", originalSource: x.url, alt: x.altText }));
     const created = await graph(
       "mutation CreateMarketplaceProduct($product: ProductCreateInput!, $media: [CreateMediaInput!]) {" +
       " productCreate(product: $product, media: $media) {" +
@@ -96,10 +97,12 @@ async function publishApprovedSubmission(id) {
       { product: {
           title: p.title,
           descriptionHtml: "<p>" + String(p.description).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>") + "</p>",
-          vendor: p.shop_name || "Wakil Ahmed Marketplace Seller",
-          productType: p.category,
+          vendor: p.brand || p.shop_name || "Wakil Ahmed Marketplace Seller",
+          productType: p.product_type || p.subcategory || p.category,
+          handle: p.handle || undefined,
+          seo: (p.seo_title || p.seo_description) ? { title: p.seo_title || p.title, description: p.seo_description || p.description.slice(0, 320) } : undefined,
           status: "ACTIVE",
-          tags: ["marketplace-seller", p.account_type === "vendor" ? "business-vendor" : "individual-seller", "portal-submission-" + p.id]
+          tags: [...(Array.isArray(p.tags) ? p.tags : []), "marketplace-seller", p.account_type === "vendor" ? "business-vendor" : "individual-seller", "portal-submission-" + p.id]
         }, media }
     );
     const result = created.productCreate;
@@ -123,6 +126,10 @@ async function publishApprovedSubmission(id) {
     { productId, variants: [{
       id: variant.id,
       price: (Number(p.price_cents) / 100).toFixed(2),
+      ...(p.compare_at_price_cents != null ? { compareAtPrice: (Number(p.compare_at_price_cents) / 100).toFixed(2) } : {}),
+      ...(p.barcode ? { barcode: p.barcode } : {}),
+      taxable: p.taxable !== false,
+      requiresShipping: p.requires_shipping !== false,
       inventoryItem: { sku: p.sku || ("WAM-" + p.id), tracked: true }
     }] }
   );
