@@ -1,14 +1,59 @@
 const { q } = require("./db");
 
-const shopifyConfigured = () => Boolean(process.env.SHOPIFY_STORE_DOMAIN && process.env.SHOPIFY_ADMIN_ACCESS_TOKEN);
+let cachedShopifyToken = null;
+let cachedShopifyTokenExpiresAt = 0;
+let tokenRequestInFlight = null;
+
+const shopifyDomain = () => (process.env.SHOPIFY_STORE_DOMAIN || "")
+  .trim().replace(/^https?:\\/\\//i, "").replace(/\\/$/, "");
+
+const shopifyConfigured = () => Boolean(
+  shopifyDomain() &&
+  (process.env.SHOPIFY_ADMIN_ACCESS_TOKEN ||
+    (process.env.SHOPIFY_CLIENT_ID && process.env.SHOPIFY_CLIENT_SECRET))
+);
+
+async function getShopifyAccessToken() {
+  if (process.env.SHOPIFY_ADMIN_ACCESS_TOKEN) return process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
+  if (!process.env.SHOPIFY_CLIENT_ID || !process.env.SHOPIFY_CLIENT_SECRET || !shopifyDomain()) {
+    throw new Error("Shopify credentials are incomplete. Configure the store domain, client ID, and client secret in Render.");
+  }
+  if (cachedShopifyToken && Date.now() < cachedShopifyTokenExpiresAt - 60000) return cachedShopifyToken;
+  if (tokenRequestInFlight) return tokenRequestInFlight;
+
+  tokenRequestInFlight = (async () => {
+    const body = new URLSearchParams({
+      grant_type: "client_credentials",
+      client_id: process.env.SHOPIFY_CLIENT_ID,
+      client_secret: process.env.SHOPIFY_CLIENT_SECRET
+    });
+    const response = await fetch("https://" + shopifyDomain() + "/admin/oauth/access_token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: body.toString(),
+      signal: AbortSignal.timeout(20000)
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.access_token) {
+      const reason = payload.error_description || payload.error || ("HTTP " + response.status);
+      throw new Error("Shopify authentication failed: " + reason);
+    }
+    cachedShopifyToken = payload.access_token;
+    cachedShopifyTokenExpiresAt = Date.now() + (Number(payload.expires_in) || 86399) * 1000;
+    return cachedShopifyToken;
+  })();
+
+  try { return await tokenRequestInFlight; }
+  finally { tokenRequestInFlight = null; }
+}
 
 async function graph(query, variables) {
   if (!shopifyConfigured()) throw new Error("Shopify Admin API credentials are not configured in Render.");
-  const domain = process.env.SHOPIFY_STORE_DOMAIN.trim().replace(/^https?:\/\//i, "").replace(/\/$/, "");
   const version = process.env.SHOPIFY_API_VERSION || "2026-10";
-  const response = await fetch("https://" + domain + "/admin/api/" + version + "/graphql.json", {
+  const accessToken = await getShopifyAccessToken();
+  const response = await fetch("https://" + shopifyDomain() + "/admin/api/" + version + "/graphql.json", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "X-Shopify-Access-Token": process.env.SHOPIFY_ADMIN_ACCESS_TOKEN },
+    headers: { "Content-Type": "application/json", "X-Shopify-Access-Token": accessToken },
     body: JSON.stringify({ query, variables }),
     signal: AbortSignal.timeout(20000)
   });
