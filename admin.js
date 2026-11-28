@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const { pool, q } = require("./db");
 const { wrap, requireRole } = require("./util");
 const { esc, money, date, csrfField } = require("./views");
+const { publishApprovedSubmission, shopifyConfigured } = require("./shopify-products");
 
 router.use(requireRole(["admin", "employee"]));
 router.use("/payouts", requireRole("admin"));
@@ -280,7 +281,7 @@ async function renderProductReviews(req, res, accountType) {
   ${p.status === 'pending' ? '<form method="post" action="/admin/products/' + p.id + '/status">' + csrfField(res.locals.csrf) + '<input type="hidden" name="return_to" value="' + basePath + '"><label>Admin note (optional)<textarea name="admin_note" rows="2" maxlength="1000" placeholder="Feedback for the submitter"></textarea></label><div class="row"><button class="btn btn-sm" name="status" value="approved">Approve listing</button><button class="btn btn-sm btn-ghost" name="status" value="rejected">Reject listing</button></div></form>' : '<p class="small muted">Admin note: ' + esc(p.admin_note || '—') + '</p>'}
 </div>`).join('') : '<div class="card"><p class="muted">No ' + (accountType === "vendor" ? 'vendor' : 'individual seller') + ' product requests have been received yet.</p></div>';
   const tabs = '<div class="card"><p><a class="btn ' + (accountType === "seller" ? '' : 'btn-ghost') + '" href="/admin/products">Individual Seller requests</a> <a class="btn ' + (accountType === "vendor" ? '' : 'btn-ghost') + '" href="/admin/vendor-products">Business Vendor requests</a></p></div>';
-  res.page(heading, '<h1>' + heading + '</h1><p class="muted">Review and approve this account type separately. Approval is recorded in the portal. Shopify publishing is not enabled yet.</p>' + tabs + cards);
+  res.page(heading, '<h1>' + heading + '</h1><p class="muted">Review each account type separately. Approved listings publish to Shopify when the secure Admin API connection is configured.</p>' + tabs + cards);
 }
 
 router.get("/products", wrap(async (req, res) => renderProductReviews(req, res, "seller")));
@@ -298,9 +299,37 @@ router.post("/products/:id/status", wrap(async (req, res) => {
   const result = await q(`update seller_product_submissions
     set status=$1, admin_note=$2, reviewed_by=$3, reviewed_at=now(), updated_at=now()
     where id=$4 and status='pending' returning id`, [status,note,req.session.user.id,id]);
-  req.session.flash = result.rowCount
-    ? { type: "ok", text: status === "approved" ? "Product listing approved in the portal. Shopify publishing is not enabled yet." : "Product listing rejected and feedback saved." }
-    : { type: "error", text: "This listing was already reviewed or could not be found." };
+  if (!result.rowCount) {
+    req.session.flash = { type: "error", text: "This listing was already reviewed or could not be found." };
+    return res.redirect(returnTo);
+  }
+  if (status === "approved" && shopifyConfigured()) {
+    try {
+      await publishApprovedSubmission(id);
+      req.session.flash = { type: "ok", text: "Listing approved and published to Shopify." };
+    } catch (e) {
+      console.error("Shopify product publish failed:", e.message);
+      await q("update seller_product_submissions set shopify_sync_error=$1 where id=$2", [e.message.slice(0, 1000), id]);
+      req.session.flash = { type: "error", text: "Listing approved, but Shopify publishing needs attention: " + e.message.slice(0, 180) };
+    }
+  } else {
+    req.session.flash = { type: "ok", text: status === "approved" ? "Listing approved. Add Shopify API credentials to enable automatic publishing." : "Product listing rejected and feedback saved." };
+  }
+  res.redirect(returnTo);
+}));
+
+router.post("/products/:id/publish", wrap(async (req, res) => {
+  const id = Number.parseInt(req.params.id, 10);
+  const returnTo = req.body.return_to === "/admin/vendor-products" ? "/admin/vendor-products" : "/admin/products";
+  if (!Number.isSafeInteger(id) || id <= 0) return res.redirect(returnTo);
+  try {
+    await publishApprovedSubmission(id);
+    req.session.flash = { type: "ok", text: "Product published to Shopify." };
+  } catch (e) {
+    console.error("Shopify product publish retry failed:", e.message);
+    await q("update seller_product_submissions set shopify_sync_error=$1 where id=$2", [e.message.slice(0, 1000), id]);
+    req.session.flash = { type: "error", text: "Shopify publishing failed: " + e.message.slice(0, 180) };
+  }
   res.redirect(returnTo);
 }));
 
