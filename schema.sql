@@ -142,3 +142,10 @@ CREATE INDEX IF NOT EXISTS seller_product_submissions_status_idx
 CREATE UNIQUE INDEX IF NOT EXISTS seller_product_submissions_sku_uq
   ON seller_product_submissions(seller_id, lower(sku))
   WHERE sku IS NOT NULL AND sku <> '';
+
+
+-- Shopify publishing state for approved seller and vendor listings.
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS shopify_product_id TEXT;
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS shopify_product_url TEXT;
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS shopify_published_at TIMESTAMPTZ;
+ALTER TABLE seller_product_submissions ADD COLUMN IF NOT EXISTS shopify_sync_error TEXT;

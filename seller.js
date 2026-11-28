@@ -114,7 +114,7 @@ router.get("/products", wrap(async (req, res) => {
       rows.map(p => '<tr><td>' + esc(p.title) + '</td><td>' + esc(p.category) + '</td><td class="r">$' + money(p.price_cents) + '</td><td><span class="pill pill-' + esc(p.status) + '">' + esc(p.status) + '</span></td><td>' + date(p.created_at) + '</td><td>' + esc(p.admin_note || '—') + '</td></tr>').join('') +
       '</table></div>'
     : '<p class="muted">You have not submitted any products yet. Select “List an Item” to get started.</p>';
-  res.page("Products", '<div class="section-head"><div><h1>My product listings</h1><p class="muted">Submit products for marketplace admin review.</p></div><a class="btn" href="/seller/products/new">List an Item</a></div><div class="card">' + list + '</div><p class="muted small">Approval in this portal does not publish a product to the public Shopify store. Shopify publishing will be enabled after the secure Shopify Admin API integration is configured.</p>');
+  res.page("Products", '<div class="section-head"><div><h1>My product listings</h1><p class="muted">Submit products for marketplace admin review.</p></div><a class="btn" href="/seller/products/new">List an Item</a></div><div class="card">' + list + '</div><p class="muted small">After admin approval, your listing is sent to Shopify for publication. You can check the publishing status here.</p>');
 }));
 
 router.get("/products/new", (_req, res) => res.page("List an Item",

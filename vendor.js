@@ -59,7 +59,7 @@ router.get("/", wrap(async (req, res) => {
 <div class="card"><h2>Vendor tools and availability</h2>
  <p><span class="pill pill-approved">Available</span> Product submissions, admin review, earnings summary and payout details.</p>
  <p><span class="pill pill-pending">Planned</span> Business verification, store logo and banner, CSV bulk upload, staff access, courier labels, coupons, tax documents, buyer messaging and dispute management.</p>
- <p class="muted small">Approving a listing in the portal does not publish it to Shopify. Shopify publishing and live inventory synchronization are not enabled.</p>
+ <p class="muted small">After admin approval, your listing is sent to Shopify for publication. Live inventory synchronization from subsequent stock changes is not yet enabled.</p>
 </div>`);
 }));
 
