@@ -5,7 +5,7 @@ let cachedShopifyTokenExpiresAt = 0;
 let tokenRequestInFlight = null;
 
 const shopifyDomain = () => (process.env.SHOPIFY_STORE_DOMAIN || "")
-  .trim().replace(/^https?:\\/\\//i, "").replace(/\\/$/, "");
+  .trim().replace(/^https?:\/\//i, "").replace(/\/$/, "");
 
 const shopifyConfigured = () => Boolean(
   shopifyDomain() &&
