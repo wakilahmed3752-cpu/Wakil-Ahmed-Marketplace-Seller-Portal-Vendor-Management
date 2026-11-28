@@ -23,8 +23,13 @@ function layout({ title, user, body, csrf, flash, pathname = "/", seo = {} }) {
     section = "Employee workspace";
     nav = '<a href="/admin" class="navlink">Overview</a><a href="/admin/sellers" class="navlink">Sellers</a><a href="/admin/earnings" class="navlink">Earnings</a>' + out;
   } else {
-    section = "Seller / Vendor workspace";
-    nav = '<a href="/seller" class="navlink">Dashboard</a><a href="/seller/products/new" class="navlink nav-list-item">List an Item</a><a href="/seller/products" class="navlink">Products</a><a href="/seller/orders" class="navlink">Orders</a><a href="/seller/inventory" class="navlink">Inventory</a><a href="/seller/marketing" class="navlink">Marketing</a><a href="/seller/advertising" class="navlink">Advertising</a><a href="/seller/profile" class="navlink">Payout details</a><a href="/seller/traffic" class="navlink">Account traffic</a>' + out;
+    if (user.account_type === "vendor") {
+      section = "Business Vendor";
+      nav = '<a href="/vendor" class="navlink">Vendor Dashboard</a><a href="/seller/products/new" class="navlink nav-list-item">List an Item</a><a href="/seller/products" class="navlink">Product Catalog</a><a href="/seller/orders" class="navlink">Orders & Sales</a><a href="/seller/inventory" class="navlink">Inventory</a><a href="/seller/marketing" class="navlink">Marketing</a><a href="/seller/advertising" class="navlink">Advertising</a><a href="/seller/profile" class="navlink">Payout Details</a><a href="/seller/traffic" class="navlink">Store Analytics</a>' + out;
+    } else {
+      section = "Individual Seller";
+      nav = '<a href="/seller" class="navlink">Seller Dashboard</a><a href="/seller/products/new" class="navlink nav-list-item">List an Item</a><a href="/seller/products" class="navlink">My Listings</a><a href="/seller/orders" class="navlink">Orders</a><a href="/seller/inventory" class="navlink">Inventory</a><a href="/seller/marketing" class="navlink">Marketing</a><a href="/seller/advertising" class="navlink">Advertising</a><a href="/seller/profile" class="navlink">Payout Details</a><a href="/seller/traffic" class="navlink">Account Traffic</a>' + out;
+    }
   }
 
   const flashHtml = flash ? '<div class="flash flash-' + esc(flash.type) + '" role="status">' + esc(flash.text) + "</div>" : "";
