@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
   email           TEXT NOT NULL,
   password_hash   TEXT NOT NULL,
   role            TEXT NOT NULL DEFAULT 'seller' CHECK (role IN ('seller','admin')),
+  account_type    TEXT NOT NULL DEFAULT 'seller' CHECK (account_type IN ('seller','vendor')),
   name            TEXT NOT NULL,
   shop_name       TEXT,
   phone           TEXT,
@@ -16,6 +17,10 @@ CREATE TABLE IF NOT EXISTS users (
   payout_details  TEXT,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE users ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAULT 'seller';
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_account_type_check;
+ALTER TABLE users ADD CONSTRAINT users_account_type_check CHECK (account_type IN ('seller','vendor'));
+
 CREATE UNIQUE INDEX IF NOT EXISTS users_email_uq ON users (lower(email));
 CREATE UNIQUE INDEX IF NOT EXISTS users_shop_uq  ON users (lower(shop_name)) WHERE shop_name IS NOT NULL;
 

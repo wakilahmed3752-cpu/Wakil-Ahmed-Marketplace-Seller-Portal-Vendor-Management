@@ -3,7 +3,7 @@
 Node.js + PostgreSQL backend for sellers, commissions, earnings and payouts.
 
 ## What it does
-- Sellers apply at `/register`; the admin approves or rejects them at `/admin/sellers`.
+- Sellers and Vendors apply at `/register` by choosing an account type; both applications enter the existing admin review queue at `/admin/sellers`.
 - Admin sets each seller's commission rate.
 - Shopify sends `orders/paid` and `refunds/create` webhooks to `/webhooks/shopify`.
   Items are matched to sellers by the product **Vendor** field, which must equal the seller's shop name.

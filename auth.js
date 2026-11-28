@@ -16,13 +16,14 @@ router.get("/", (req, res) => {
 });
 
 // ---------- Register ----------
-const registerForm = (csrf, v = {}, errs = []) => `
+const registerForm = (csrf, v = {}, errs = [], accountType = "seller") => `
 <div class="card narrow">
-  <h1>Become a seller</h1>
-  <p class="muted">Apply to sell on our marketplace. We review every application and email you the decision.</p>
+  <h1>Apply to sell on our marketplace</h1>
+  <p class="muted">Choose Seller or Vendor. We review every application and email you the decision.</p>
   ${errs.length ? `<div class="flash flash-error"><ul>${errs.map((e) => `<li>${esc(e)}</li>`).join("")}</ul></div>` : ""}
   <form method="post" action="/register">
     ${csrfField(csrf)}
+    <label>Account type *<select name="account_type" required><option value="seller" ${(v.account_type || accountType) === "seller" ? "selected" : ""}>Seller</option><option value="vendor" ${(v.account_type || accountType) === "vendor" ? "selected" : ""}>Vendor</option></select></label>
     <label>Full name *<input name="name" required maxlength="80" value="${esc(v.name)}" autocomplete="name"></label>
     <label>Email *<input type="email" name="email" required maxlength="254" value="${esc(v.email)}" autocomplete="email"></label>
     <label>Phone / WhatsApp *<input name="phone" required maxlength="40" value="${esc(v.phone)}" autocomplete="tel"></label>
@@ -37,9 +38,9 @@ const registerForm = (csrf, v = {}, errs = []) => `
   <p class="muted center">Already approved? <a href="/login">Sign in</a></p>
 </div>`;
 
-router.get("/register", (req, res) => res.page("Become a seller", registerForm(res.locals.csrf), {
+router.get("/register", (req, res) => res.page("Apply as Seller or Vendor", registerForm(res.locals.csrf), {
   indexable: true,
-  description: "Apply to become a seller on Wakil Ahmed Marketplace. US-based sellers can submit a shop application, list approved products, ship orders with carrier tracking, and manage marketplace earnings."
+  description: "Apply as a Seller or Vendor on Wakil Ahmed Marketplace. Submit your shop details for review and manage approved marketplace listings and earnings."
 }));
 
 router.post(
@@ -48,6 +49,7 @@ router.post(
   wrap(async (req, res) => {
     const b = req.body;
     const v = {
+      account_type: (b.account_type || "seller").trim().toLowerCase(),
       name: (b.name || "").trim(),
       email: (b.email || "").trim().toLowerCase(),
       phone: (b.phone || "").trim(),
@@ -55,6 +57,7 @@ router.post(
       category: (b.category || "").trim(),
     };
     const errs = [];
+    if (!["seller", "vendor"].includes(v.account_type)) errs.push("Please choose Seller or Vendor.");
     if (v.name.length < 2) errs.push("Please enter your full name.");
     if (!emailOk(v.email)) errs.push("Please enter a valid email address.");
     if (v.phone.length < 6) errs.push("Please enter a phone or WhatsApp number.");
@@ -63,18 +66,18 @@ router.post(
     if ((b.password || "").length < 10) errs.push("Password must be at least 10 characters.");
     if (b.password !== b.password2) errs.push("Passwords do not match.");
     if (!b.terms) errs.push("You must accept the seller terms.");
-    if (errs.length) return res.status(400).page("Become a seller", registerForm(res.locals.csrf, v, errs));
+    if (errs.length) return res.status(400).page("Apply as Seller or Vendor", registerForm(res.locals.csrf, v, errs));
 
     try {
       const hash = await bcrypt.hash(b.password, 12);
       await q(
-        `insert into users (email, password_hash, role, name, shop_name, phone, category, status)
-         values ($1,$2,'seller',$3,$4,$5,$6,'pending')`,
-        [v.email, hash, v.name, v.shop_name, v.phone, v.category]
+        `insert into users (email, password_hash, role, account_type, name, shop_name, phone, category, status)
+         values ($1,$2,'seller',$3,$4,$5,$6,$7,'pending')`,
+        [v.email, hash, v.account_type, v.name, v.shop_name, v.phone, v.category]
       );
     } catch (e) {
       if (e.code === "23505")
-        return res.status(400).page("Become a seller", registerForm(res.locals.csrf, v, ["An account with that email or shop name already exists."]));
+        return res.status(400).page("Apply as Seller or Vendor", registerForm(res.locals.csrf, v, ["An account with that email or shop name already exists."]));
       throw e;
     }
     res.page(
@@ -89,7 +92,7 @@ router.post(
 // ---------- Login ----------
 const loginForm = (csrf, err = "", email = "") => `
 <div class="card narrow">
-  <h1>Seller sign in</h1>
+  <h1>Seller / Vendor sign in</h1>
   ${err ? `<div class="flash flash-error">${esc(err)}</div>` : ""}
   <form method="post" action="/login">
     ${csrfField(csrf)}
@@ -97,7 +100,7 @@ const loginForm = (csrf, err = "", email = "") => `
     <label>Password<input type="password" name="password" required autocomplete="current-password"></label>
     <button class="btn btn-block">Sign in</button>
   </form>
-  <p class="muted center">New here? <a href="/register">Apply to become a seller</a></p>
+  <p class="muted center">New here? <a href="/register">Apply as Seller or Vendor</a></p>
 </div>`;
 
 router.get("/login", (req, res) => res.page("Sign in", loginForm(res.locals.csrf)));
