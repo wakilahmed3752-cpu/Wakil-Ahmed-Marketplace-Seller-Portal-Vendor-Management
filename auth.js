@@ -7,7 +7,7 @@ const { esc, csrfField } = require("./views");
 
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false });
 const DUMMY = bcrypt.hashSync("timing-protection-only", 12);
-const emailOk = (e) => /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(e) && e.length <= 254;
+const emailOk = (e) => e.length <= 254 && e.includes("@") && e.slice(e.lastIndexOf("@")).includes(".") && !e.includes(" ");
 const destination = (u) => u.role === "seller" ? (u.account_type === "vendor" ? "/vendor" : "/seller") : "/admin";
 
 router.get("/", (req, res) => {
