@@ -6,7 +6,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check seller-tiktok-ads.js"
+    "check": "node --check server.js && node --check admin.js && node --check shopify-products.js && node --check seller-tiktok-ads.js"
   },
   "engines": {
     "node": ">=18"
