@@ -18,7 +18,9 @@ router.get(
   wrap(async (req, res) => {
     const { rows: [s] } = await q(
       `select (select count(*) from users where role='seller' and status='pending') pending,
-              (select count(*) from users where role='seller' and status='approved') approved,
+              (select count(*) from users where role='seller' and account_type='seller' and status='approved') approved,
+              (select count(*) from users where role='seller' and account_type='vendor' and status='pending') pending_vendors,
+              (select count(*) from users where role='seller' and account_type='vendor' and status='approved') approved_vendors,
               coalesce((select sum(earning_cents) from earnings where status='unpaid'),0)::bigint owed,
               coalesce((select sum(commission_cents) from earnings),0)::bigint commission,
               (select max(currency) from earnings) cur`);
@@ -36,6 +38,8 @@ router.get(
 <div class="stats">
   <div class="stat"><span>Applications waiting</span><strong>${s.pending}</strong></div>
   <div class="stat"><span>Approved sellers</span><strong>${s.approved}</strong></div>
+  <div class="stat"><span>Vendor applications waiting</span><strong>${s.pending_vendors}</strong></div>
+  <div class="stat"><span>Approved vendors</span><strong>${s.approved_vendors}</strong></div>
   <div class="stat"><span>Owed to sellers</span><strong>${money(s.owed, s.cur || "")}</strong></div>
   <div class="stat"><span>Your commission earned</span><strong>${money(s.commission, s.cur || "")}</strong></div>
 </div>
@@ -48,13 +52,13 @@ router.get(
 router.get(
   "/sellers",
   wrap(async (req, res) => {
-    const { rows } = await q("select * from users where role='seller' order by (status='pending') desc, created_at desc");
+    const { rows } = await q("select * from users where role='seller' order by (status='pending') desc, account_type, created_at desc");
     const csrf = res.locals.csrf;
     const body = rows.length
       ? rows
           .map(
             (u) => `<div class="card seller">
-  <div class="seller-head"><div><h2>${esc(u.shop_name)}</h2><p class="muted">${esc(u.name)} · ${esc(u.email)} · ${esc(u.phone)}</p>
+  <div class="seller-head"><div><h2>${esc(u.shop_name)}</h2><p class="muted">${esc(u.account_type || "seller").toUpperCase()} · ${esc(u.name)} · ${esc(u.email)} · ${esc(u.phone)}</p>
   <p class="muted">Sells: ${esc(u.category)} · Applied ${date(u.created_at)}</p></div>
   <span class="pill pill-${esc(u.status)}">${esc(u.status)}</span></div>
   <div class="row">
@@ -72,7 +76,7 @@ router.get(
           )
           .join("")
       : `<div class="card"><p class="muted">No seller applications yet.</p></div>`;
-    res.page("Sellers", `<h1>Sellers</h1>${body}`);
+    res.page("Seller and vendor applications", `<h1>Seller and vendor applications</h1>${body}`);
   })
 );
 
@@ -82,7 +86,7 @@ router.post(
     const status = req.body.status;
     if (!["pending", "approved", "rejected", "suspended"].includes(status)) return res.redirect("/admin/sellers");
     await q("update users set status=$1 where id=$2 and role='seller'", [status, parseInt(req.params.id, 10)]);
-    req.session.flash = { type: "ok", text: "Seller status updated." };
+    req.session.flash = { type: "ok", text: "Application status updated." };
     res.redirect("/admin/sellers");
   })
 );
