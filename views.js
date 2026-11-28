@@ -15,7 +15,7 @@ function layout({ title, user, body, csrf, flash, pathname = "/", seo = {} }) {
   let nav = "";
   let section = "Marketplace";
   if (!user) {
-    nav = '<a href="/login">Sign in</a><a class="btn btn-sm" href="/register">Become a seller</a>';
+    nav = '<a href="/login">Sign in</a><a class="btn btn-sm" href="/register">Apply as Seller or Vendor</a>';
   } else if (user.role === "admin") {
     section = "Administrator";
     nav = '<a href="/admin" class="navlink">Overview</a><a href="/admin/sellers" class="navlink">Sellers</a><a href="/admin/payouts" class="navlink">Payouts</a><a href="/admin/earnings" class="navlink">Earnings</a><a href="/admin/team" class="navlink">Team access</a><a href="/admin/marketing" class="navlink">Marketing</a><a href="/admin/advertising" class="navlink">Advertising</a><a href="/admin/traffic" class="navlink">Portal traffic</a>' + out;
@@ -23,7 +23,7 @@ function layout({ title, user, body, csrf, flash, pathname = "/", seo = {} }) {
     section = "Employee workspace";
     nav = '<a href="/admin" class="navlink">Overview</a><a href="/admin/sellers" class="navlink">Sellers</a><a href="/admin/earnings" class="navlink">Earnings</a>' + out;
   } else {
-    section = "Seller workspace";
+    section = "Seller / Vendor workspace";
     nav = '<a href="/seller" class="navlink">Dashboard</a><a href="/seller/products/new" class="navlink nav-list-item">List an Item</a><a href="/seller/products" class="navlink">Products</a><a href="/seller/orders" class="navlink">Orders</a><a href="/seller/inventory" class="navlink">Inventory</a><a href="/seller/marketing" class="navlink">Marketing</a><a href="/seller/advertising" class="navlink">Advertising</a><a href="/seller/profile" class="navlink">Payout details</a><a href="/seller/traffic" class="navlink">Account traffic</a>' + out;
   }
 
