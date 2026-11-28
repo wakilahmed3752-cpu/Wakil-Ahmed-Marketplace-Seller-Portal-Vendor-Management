@@ -16,7 +16,7 @@ Node.js + PostgreSQL backend for sellers, commissions, earnings and payouts.
 | `SESSION_SECRET` | Any long random string (40+ characters) |
 | `ADMIN_EMAIL` | Your admin login email |
 | `ADMIN_PASSWORD` | Your admin password (10+ characters) |
-| `SHOPIFY_WEBHOOK_SECRET` | Client secret of your Shopify app, used for webhook verification |\n| `SHOPIFY_STORE_DOMAIN` | `wakilahmed.com` (your Shopify store domain) |\n| `SHOPIFY_ADMIN_ACCESS_TOKEN` | Admin API access token from a Shopify custom app with product, publication, inventory and location permissions |\n| `SHOPIFY_API_VERSION` | Optional; defaults to `2025-10` |
+| `SHOPIFY_WEBHOOK_SECRET` | Client secret of your Shopify app, used for webhook verification |\n| `SHOPIFY_STORE_DOMAIN` | `wakilahmedllc.myshopify.com` (use your current `.myshopify.com` store domain) |\n| `SHOPIFY_ADMIN_ACCESS_TOKEN` | Admin API access token from a Shopify custom app with product, publication, inventory and location permissions |\n| `SHOPIFY_API_VERSION` | Optional; defaults to `2026-10` |
 | `NODE_ENV` | `production` |
 | `BRAND_NAME` | Optional, shown in the header |
 
