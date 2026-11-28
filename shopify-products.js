@@ -81,6 +81,46 @@ async function publishApprovedSubmission(id) {
     }
   }
 
+  const productData = await graph(
+    "query MarketplaceProductVariant($id: ID!) { product(id: $id) { variants(first: 1) { nodes { id inventoryItem { id } } } } }",
+    { id: productId }
+  );
+  const variant = productData.product?.variants?.nodes?.[0];
+  if (!variant?.id || !variant.inventoryItem?.id) throw new Error("Shopify product variant could not be loaded.");
+  const updated = await graph(
+    "mutation UpdateMarketplaceVariant($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {" +
+    " productVariantsBulkUpdate(productId: $productId, variants: $variants) { productVariants { id } userErrors { field message } } }",
+    { productId, variants: [{
+      id: variant.id,
+      price: (Number(p.price_cents) / 100).toFixed(2),
+      inventoryItem: { sku: p.sku || ("WAM-" + p.id), tracked: true }
+    }] }
+  );
+  const variantErrors = updated.productVariantsBulkUpdate.userErrors || [];
+  if (variantErrors.length) throw new Error(variantErrors.map(x => x.message).join("; "));
+
+  const locations = await graph("query { locations(first: 25) { nodes { id name isActive } } }", {});
+  const location = locations.locations.nodes.find(x => x.isActive);
+  if (!location) throw new Error("No active Shopify inventory location was found.");
+  const activated = await graph(
+    "mutation ActivateMarketplaceInventory($inventoryItemId: ID!, $locationId: ID!) {" +
+    " inventoryActivate(inventoryItemId: $inventoryItemId, locationId: $locationId) { userErrors { field message } } }",
+    { inventoryItemId: variant.inventoryItem.id, locationId: location.id }
+  );
+  const activationErrors = activated.inventoryActivate.userErrors || [];
+  if (activationErrors.length) throw new Error(activationErrors.map(x => x.message).join("; "));
+  const stock = await graph(
+    "mutation SetMarketplaceInventory($input: InventorySetQuantitiesInput!) {" +
+    " inventorySetQuantities(input: $input) { userErrors { field message } } }",
+    { input: {
+      name: "available",
+      reason: "correction",
+      quantities: [{ inventoryItemId: variant.inventoryItem.id, locationId: location.id, quantity: Number(p.inventory_quantity) }]
+    } }
+  );
+  const stockErrors = stock.inventorySetQuantities.userErrors || [];
+  if (stockErrors.length) throw new Error(stockErrors.map(x => x.message).join("; "));
+
   const publications = await graph("query { publications(first: 50) { nodes { id name } } }", {});
   const onlineStore = publications.publications.nodes.find(x => x.name.toLowerCase() === "online store");
   if (!onlineStore) throw new Error("Shopify Online Store sales channel was not found.");
