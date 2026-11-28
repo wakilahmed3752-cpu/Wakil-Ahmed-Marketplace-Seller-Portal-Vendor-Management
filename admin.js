@@ -12,6 +12,7 @@ router.use("/advertising", requireRole("admin"));
 router.use("/sellers/:id/status", requireRole("admin"));
 router.use("/sellers/:id/commission", requireRole("admin"));
 router.use("/products", requireRole("admin"));
+router.use("/vendor-products", requireRole("admin"));
 
 router.get(
   "/",
@@ -260,11 +261,15 @@ router.get("/traffic", wrap(async (req, res) => {
 }));
 
 
-// ---------- Seller product listing review ----------
-router.get("/products", wrap(async (_req, res) => {
-  const { rows } = await q(`select p.*, u.shop_name, u.name seller_name, u.email seller_email
+// ---------- Separate seller and vendor product listing review ----------
+async function renderProductReviews(req, res, accountType) {
+  const { rows } = await q(`select p.*, u.shop_name, u.name seller_name, u.email seller_email,
+      coalesce(u.account_type, 'seller') account_type
     from seller_product_submissions p join users u on u.id=p.seller_id
-    order by case p.status when 'pending' then 0 else 1 end, p.created_at desc limit 300`);
+    where coalesce(u.account_type, 'seller')=$1
+    order by case p.status when 'pending' then 0 else 1 end, p.created_at desc limit 300`, [accountType]);
+  const basePath = accountType === "vendor" ? "/admin/vendor-products" : "/admin/products";
+  const heading = accountType === "vendor" ? "Business Vendor product requests" : "Individual Seller product requests";
   const cards = rows.length ? rows.map(p => `
 <div class="card product-review">
   <div class="seller-head"><div><h2>${esc(p.title)}</h2><p class="muted small">${esc(p.shop_name)} · ${esc(p.seller_name)} · ${esc(p.seller_email)}</p></div><span class="pill pill-${esc(p.status)}">${esc(p.status)}</span></div>
@@ -272,18 +277,23 @@ router.get("/products", wrap(async (_req, res) => {
   <p>${esc(p.description)}</p>
   <p class="small muted">Category: ${esc(p.category)} · Price: ${money(p.price_cents)} · SKU: ${esc(p.sku || '—')} · Quantity: ${p.inventory_quantity}</p>
   <p class="small muted">Submitted: ${date(p.created_at)}</p>
-  ${p.status === 'pending' ? '<form method="post" action="/admin/products/' + p.id + '/status">' + csrfField(res.locals.csrf) + '<label>Admin note (optional)<textarea name="admin_note" rows="2" maxlength="1000" placeholder="Feedback for the seller"></textarea></label><div class="row"><button class="btn btn-sm" name="status" value="approved">Approve listing</button><button class="btn btn-sm btn-ghost" name="status" value="rejected">Reject listing</button></div></form>' : '<p class="small muted">Admin note: ' + esc(p.admin_note || '—') + '</p>'}
-</div>`).join('') : '<div class="card"><p class="muted">No product submissions have been received yet.</p></div>';
-  res.page("Product listings", '<h1>Product listing review</h1><p class="muted">Review seller-submitted products. Approving here records marketplace approval; it does not publish to Shopify until the Shopify Admin API connection is configured.</p>' + cards);
-}));
+  ${p.status === 'pending' ? '<form method="post" action="/admin/products/' + p.id + '/status">' + csrfField(res.locals.csrf) + '<input type="hidden" name="return_to" value="' + basePath + '"><label>Admin note (optional)<textarea name="admin_note" rows="2" maxlength="1000" placeholder="Feedback for the submitter"></textarea></label><div class="row"><button class="btn btn-sm" name="status" value="approved">Approve listing</button><button class="btn btn-sm btn-ghost" name="status" value="rejected">Reject listing</button></div></form>' : '<p class="small muted">Admin note: ' + esc(p.admin_note || '—') + '</p>'}
+</div>`).join('') : '<div class="card"><p class="muted">No ' + (accountType === "vendor" ? 'vendor' : 'individual seller') + ' product requests have been received yet.</p></div>';
+  const tabs = '<div class="card"><p><a class="btn ' + (accountType === "seller" ? '' : 'btn-ghost') + '" href="/admin/products">Individual Seller requests</a> <a class="btn ' + (accountType === "vendor" ? '' : 'btn-ghost') + '" href="/admin/vendor-products">Business Vendor requests</a></p></div>';
+  res.page(heading, '<h1>' + heading + '</h1><p class="muted">Review and approve this account type separately. Approval is recorded in the portal. Shopify publishing is not enabled yet.</p>' + tabs + cards);
+}
+
+router.get("/products", wrap(async (req, res) => renderProductReviews(req, res, "seller")));
+router.get("/vendor-products", wrap(async (req, res) => renderProductReviews(req, res, "vendor")));
 
 router.post("/products/:id/status", wrap(async (req, res) => {
   const id = Number.parseInt(req.params.id, 10);
   const status = req.body.status;
   const note = (req.body.admin_note || "").trim().slice(0, 1000) || null;
+  const returnTo = req.body.return_to === "/admin/vendor-products" ? "/admin/vendor-products" : "/admin/products";
   if (!Number.isSafeInteger(id) || id <= 0 || !["approved","rejected"].includes(status)) {
     req.session.flash = { type: "error", text: "Invalid product review request." };
-    return res.redirect("/admin/products");
+    return res.redirect(returnTo);
   }
   const result = await q(`update seller_product_submissions
     set status=$1, admin_note=$2, reviewed_by=$3, reviewed_at=now(), updated_at=now()
@@ -291,7 +301,7 @@ router.post("/products/:id/status", wrap(async (req, res) => {
   req.session.flash = result.rowCount
     ? { type: "ok", text: status === "approved" ? "Product listing approved in the portal. Shopify publishing is not enabled yet." : "Product listing rejected and feedback saved." }
     : { type: "error", text: "This listing was already reviewed or could not be found." };
-  res.redirect("/admin/products");
+  res.redirect(returnTo);
 }));
 
 module.exports = router;
