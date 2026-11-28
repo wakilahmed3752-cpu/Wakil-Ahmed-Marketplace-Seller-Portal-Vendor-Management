@@ -131,7 +131,8 @@ async function publishApprovedSubmission(id) {
   );
   const errors = published.publishablePublish.userErrors || [];
   if (errors.length) throw new Error(errors.map(x => x.message).join("; "));
-  await q("update seller_product_submissions set shopify_published_at=now(), shopify_sync_error=null, updated_at=now() where id=$1", [id]);
+  const finalProduct = await graph("query MarketplacePublishedProduct($id: ID!) { product(id: $id) { onlineStoreUrl } }", { id: productId });
+  await q("update seller_product_submissions set shopify_product_url=$1, shopify_published_at=now(), shopify_sync_error=null, updated_at=now() where id=$2", [finalProduct.product?.onlineStoreUrl || null, id]);
   return { productId };
 }
 
