@@ -16,7 +16,7 @@ Node.js + PostgreSQL backend for sellers, commissions, earnings and payouts.
 | `SESSION_SECRET` | Any long random string (40+ characters) |
 | `ADMIN_EMAIL` | Your admin login email |
 | `ADMIN_PASSWORD` | Your admin password (10+ characters) |
-| `SHOPIFY_WEBHOOK_SECRET` | Client secret of your Shopify app |
+| `SHOPIFY_WEBHOOK_SECRET` | Client secret of your Shopify app, used for webhook verification |\n| `SHOPIFY_STORE_DOMAIN` | `wakilahmed.com` (your Shopify store domain) |\n| `SHOPIFY_ADMIN_ACCESS_TOKEN` | Admin API access token from a Shopify custom app with product, publication, inventory and location permissions |\n| `SHOPIFY_API_VERSION` | Optional; defaults to `2025-10` |
 | `NODE_ENV` | `production` |
 | `BRAND_NAME` | Optional, shown in the header |
 
@@ -63,3 +63,10 @@ in Render environment settings, never in source control.
 This milestone connects and disconnects advertiser accounts and displays
 the advertiser IDs authorized by TikTok. Campaign reporting and campaign
 management are separate follow-on features.
+
+
+## Approved seller and vendor product publishing
+
+When an admin approves an individual seller or business vendor listing, the portal creates the product in Shopify, applies the seller's shop name as the Shopify Vendor, sets the submitted price and SKU, tracks inventory at the first active Shopify location, and publishes to the Online Store sales channel. The product is tagged with its account type and portal submission ID. If publishing fails after product creation, the Shopify product ID is retained so the admin can retry without creating a duplicate. A direct HTTPS image URL ending in JPG, PNG, WebP or GIF is attached; social share links are intentionally not imported as product images. The existing Shopify webhook secret is not an Admin API access token.
+
+Before enabling this feature, create a Shopify custom app and grant the Admin API scopes `write_products`, `read_publications`, `write_publications`, `write_inventory`, and `read_locations`. Install the app and add its Admin API access token to Render as `SHOPIFY_ADMIN_ACCESS_TOKEN`, with `SHOPIFY_STORE_DOMAIN` set to `wakilahmed.com`. Never commit the access token to GitHub or paste it into chat. The Online Store sales channel must be available in Shopify.
