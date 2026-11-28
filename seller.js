@@ -117,17 +117,38 @@ router.get("/products", wrap(async (req, res) => {
   res.page("Products", '<div class="section-head"><div><h1>My product listings</h1><p class="muted">Submit products for marketplace admin review.</p></div><a class="btn" href="/seller/products/new">List an Item</a></div><div class="card">' + list + '</div><p class="muted small">After admin approval, your listing is sent to Shopify for publication. You can check the publishing status here.</p>');
 }));
 
-router.get("/products/new", (_req, res) => res.page("List an Item",
-  '<h1>List an Item</h1><p class="muted">Enter your product details. Your listing will be reviewed by the marketplace admin before it can be published.</p>' +
-  '<div class="card narrow"><form method="post" action="/seller/products">' + csrfField(res.locals.csrf) +
-  '<label>Product name<input name="title" required minlength="3" maxlength="160" placeholder="Enter product name"></label>' +
-  '<label>Category<input name="category" required minlength="2" maxlength="80" placeholder="Example: Household Essentials"></label>' +
-  '<label>Product description<textarea name="description" required minlength="10" maxlength="10000" rows="6" placeholder="Describe the product, its features and what is included"></textarea></label>' +
-  '<label>Price (USD)<input name="price" type="number" required min="0.01" max="1000000" step="0.01" placeholder="0.00"></label>' +
-  '<label>SKU (optional)<input name="sku" maxlength="80" placeholder="Your product SKU"></label>' +
-  '<label>Available quantity<input name="inventory_quantity" type="number" required min="0" max="1000000" step="1" value="0"></label>' +
-  '<label>Product image URL (optional)<input name="image_url" type="url" maxlength="1000" placeholder="https://..."></label>' +
-  '<button class="btn btn-block" type="submit">Submit for Approval</button></form></div>'));
+router.get("/products/new", (_req, res) => res.page("List a Product",
+  '<h1>List a Product</h1><p class="muted">Complete the product details for marketplace review. Your listing is not published until approved.</p>' +
+  '<form method="post" action="/seller/products" class="product-listing-form">' + csrfField(res.locals.csrf) +
+  '<div class="card"><h2>Product information</h2>' +
+  '<label>Product name<input name="title" required minlength="3" maxlength="160"></label>' +
+  '<label>Product description<textarea name="description" required minlength="10" maxlength="10000" rows="7"></textarea></label>' +
+  '<div class="form-grid"><label>Brand<input name="brand" maxlength="120"></label><label>Product type<input name="product_type" maxlength="120"></label>' +
+  '<label>Category<input name="category" required maxlength="80"></label><label>Subcategory<input name="subcategory" maxlength="80"></label></div>' +
+  '<label>Tags <small>Separate with commas</small><input name="tags" maxlength="1000"></label></div>' +
+  '<div class="card"><h2>Product images</h2><p class="muted small">Enter public HTTPS image links, one per line. The first image is the featured image.</p>' +
+  '<label>Image URLs<textarea name="image_urls" rows="4" maxlength="6000" placeholder="https://example.com/front.jpg"></textarea></label>' +
+  '<label>Image alt text<input name="image_alt" maxlength="250"></label></div>' +
+  '<div class="card"><h2>Pricing and inventory</h2><div class="form-grid">' +
+  '<label>Price (USD)<input name="price" type="number" required min="0.01" max="1000000" step="0.01"></label>' +
+  '<label>Compare-at price (USD)<input name="compare_at_price" type="number" min="0" max="1000000" step="0.01"></label>' +
+  '<label>Cost per item (USD)<input name="cost_per_item" type="number" min="0" max="1000000" step="0.01"></label>' +
+  '<label>SKU<input name="sku" maxlength="80"></label><label>Barcode / GTIN<input name="barcode" maxlength="80"></label>' +
+  '<label>Available quantity<input name="inventory_quantity" type="number" required min="0" max="1000000" step="1" value="0"></label></div></div>' +
+  '<div class="card"><h2>Variants</h2><p class="muted small">Options JSON example: [{"name":"Size","values":["S","M","L"]}]. Variant rows JSON example: [{"optionValues":{"Size":"M"},"price":"19.99","sku":"ITEM-M","inventoryQuantity":5}].</p>' +
+  '<label>Product options JSON<textarea name="variant_options" rows="3" maxlength="4000" placeholder=\'[{"name":"Size","values":["S","M","L"]}]\'></textarea></label>' +
+  '<label>Variant details JSON<textarea name="variant_rows" rows="4" maxlength="8000" placeholder=\'[{"optionValues":{"Size":"M"},"price":"19.99","sku":"ITEM-M","inventoryQuantity":5}]\'>[]</textarea></label></div>' +
+  '<div class="card"><h2>Shipping and tax</h2><div class="form-grid">' +
+  '<label>Weight<input name="weight_value" type="number" min="0" max="100000" step="0.001"></label>' +
+  '<label>Weight unit<select name="weight_unit"><option value="lb">Pounds (lb)</option><option value="oz">Ounces (oz)</option><option value="kg">Kilograms (kg)</option><option value="g">Grams (g)</option></select></label>' +
+  '<label>Country of origin<input name="country_of_origin" maxlength="2" placeholder="US"></label><label>HS tariff code<input name="hs_code" maxlength="20"></label></div>' +
+  '<label class="check"><input type="checkbox" name="requires_shipping" value="true" checked> Physical product requiring shipping</label>' +
+  '<label class="check"><input type="checkbox" name="taxable" value="true" checked> Charge tax on this product</label></div>' +
+  '<div class="card"><h2>Search engine listing</h2><label>SEO page title<input name="seo_title" maxlength="70"></label>' +
+  '<label>Meta description<textarea name="seo_description" rows="3" maxlength="320"></textarea></label>' +
+  '<label>URL handle<input name="handle" maxlength="120"></label></div>' +
+  '<div class="card"><button class="btn btn-block" type="submit">Submit Product for Approval</button></div></form>'
+));
 
 router.post("/products", wrap(async (req, res) => {
   const title = (req.body.title || "").trim().slice(0, 160);
@@ -136,28 +157,41 @@ router.post("/products", wrap(async (req, res) => {
   const price = Number(req.body.price);
   const quantity = Number(req.body.inventory_quantity);
   const sku = (req.body.sku || "").trim().slice(0, 80) || null;
-  const imageUrl = (req.body.image_url || "").trim().slice(0, 1000) || null;
-  if (title.length < 3 || category.length < 2 || description.length < 10 ||
-      !Number.isFinite(price) || price <= 0 || price > 1000000 ||
-      !Number.isInteger(quantity) || quantity < 0 || quantity > 1000000 ||
-      (imageUrl && !/^https:\/\//i.test(imageUrl))) {
-    req.session.flash = { type: "error", text: "Please check the product details. Price must be positive, quantity must be a whole number, and image links must use HTTPS." };
+  const images = String(req.body.image_urls || "").split(/\r?\n/).map(x => x.trim()).filter(Boolean).slice(0, 12);
+  const tags = String(req.body.tags || "").split(",").map(x => x.trim()).filter(Boolean).slice(0, 30);
+  const cents = v => v === undefined || v === "" ? null : (Number.isFinite(Number(v)) && Number(v) >= 0 ? Math.round(Number(v) * 100) : NaN);
+  const compareAt = cents(req.body.compare_at_price), cost = cents(req.body.cost_per_item);
+  const weight = req.body.weight_value === "" || req.body.weight_value === undefined ? null : Number(req.body.weight_value);
+  let options = [], variantRows = [];
+  try { options = req.body.variant_options ? JSON.parse(req.body.variant_options) : []; variantRows = req.body.variant_rows ? JSON.parse(req.body.variant_rows) : []; }
+  catch (_) { req.session.flash = { type: "error", text: "Variant fields must contain valid JSON." }; return res.redirect("/seller/products/new"); }
+  const validImages = images.every(url => { try { return new URL(url).protocol === "https:"; } catch (_) { return false; } });
+  if (title.length < 3 || category.length < 2 || description.length < 10 || !Number.isFinite(price) || price <= 0 || price > 1000000 ||
+      !Number.isInteger(quantity) || quantity < 0 || quantity > 1000000 || (compareAt !== null && !Number.isFinite(compareAt)) ||
+      (cost !== null && !Number.isFinite(cost)) || (weight !== null && (!Number.isFinite(weight) || weight < 0)) || !validImages ||
+      !Array.isArray(options) || !Array.isArray(variantRows) || options.length > 3 || variantRows.length > 100) {
+    req.session.flash = { type: "error", text: "Please check required fields, prices, quantities, HTTPS image links and variant JSON." };
     return res.redirect("/seller/products/new");
   }
+  const unit = ["lb","oz","kg","g"].includes(req.body.weight_unit) ? req.body.weight_unit : "lb";
+  const handle = (req.body.handle || "").trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").slice(0,120) || null;
   try {
-    await q("insert into seller_product_submissions (seller_id,title,description,category,price_cents,sku,inventory_quantity,image_url) values ($1,$2,$3,$4,$5,$6,$7,$8)",
-      [req.session.user.id, title, description, category, Math.round(price * 100), sku, quantity, imageUrl]);
+    await q(`insert into seller_product_submissions
+      (seller_id,title,description,category,price_cents,sku,inventory_quantity,image_url,brand,product_type,subcategory,tags,image_urls,compare_at_price_cents,cost_per_item_cents,barcode,weight_value,weight_unit,requires_shipping,taxable,country_of_origin,hs_code,seo_title,seo_description,handle,variant_options,variant_rows)
+      values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26::jsonb,$27::jsonb)`,
+      [req.session.user.id,title,description,category,Math.round(price*100),sku,quantity,images[0]||null,
+       (req.body.brand||"").trim().slice(0,120)||null,(req.body.product_type||"").trim().slice(0,120)||null,(req.body.subcategory||"").trim().slice(0,80)||null,tags,
+       JSON.stringify(images.map(url=>({url,altText:(req.body.image_alt||"").trim().slice(0,250)||title}))),compareAt,cost,
+       (req.body.barcode||"").trim().slice(0,80)||null,weight,unit,req.body.requires_shipping==="true",req.body.taxable==="true",
+       (req.body.country_of_origin||"").trim().toUpperCase().slice(0,2)||null,(req.body.hs_code||"").trim().slice(0,20)||null,
+       (req.body.seo_title||"").trim().slice(0,70)||null,(req.body.seo_description||"").trim().slice(0,320)||null,handle,JSON.stringify(options),JSON.stringify(variantRows)]);
   } catch (e) {
-    if (e.code === "23505") {
-      req.session.flash = { type: "error", text: "That SKU is already used by one of your submitted products. Please enter a different SKU." };
-      return res.redirect("/seller/products/new");
-    }
+    if (e.code === "23505") { req.session.flash = { type: "error", text: "That SKU is already used by one of your submitted products. Please enter a different SKU." }; return res.redirect("/seller/products/new"); }
     throw e;
   }
   req.session.flash = { type: "ok", text: "Your product was submitted successfully and is waiting for admin review." };
   res.redirect("/seller/products");
 }));
-
 router.get("/inventory", (_req, res) => res.page("Inventory", '<h1>Inventory</h1><div class="card"><h2>Inventory sync not enabled</h2><p class="muted">Live stock quantities are not currently synchronized with Shopify. This page is a placeholder until inventory permissions and stock update workflows are implemented.</p><p class="small muted">No inventory quantities have been changed.</p></div>'));
 
 
